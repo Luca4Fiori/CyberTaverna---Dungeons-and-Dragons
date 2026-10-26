@@ -33,6 +33,23 @@ model User {
   sessions     Session[]
   memberships  CampaignMember[]
   audits       AuditLog[]
+  recoveryTokens PasswordResetToken[]
+}
+model PasswordResetToken {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String @unique
+  expiresAt DateTime @db.Timestamptz(3)
+  usedAt DateTime? @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([userId, expiresAt])
+}
+model RateLimitBucket {
+  key String @id
+  count Int @default(1)
+  expiresAt DateTime @db.Timestamptz(3)
+  @@index([expiresAt])
 }
 model UserProfile {
   userId        String @id @db.Uuid

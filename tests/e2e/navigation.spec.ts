@@ -6,12 +6,7 @@ test("navega sem apresentar funcionalidades fictícias", async ({ page }) => {
   ).toBeVisible();
   await page.getByRole("link", { name: "Explorar campanhas" }).click();
   await expect(
-    page.getByRole("heading", { name: "Suas campanhas", exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByText("Este módulo ainda não está implementado.", {
-      exact: false,
-    }),
+    page.getByRole("heading", { name: "Entrar na taverna", exact: true }),
   ).toBeVisible();
   expect(
     await page.evaluate(

@@ -4,15 +4,16 @@ export default function Page() {
       <p className="eyebrow">CONSTRUÇÃO TRANSPARENTE</p>
       <h1>Estado do projeto</h1>
       <p>
-        A fundação inclui navegação, preferências locais, esquema relacional,
-        contratos de validação e um serviço de tempo real que bloqueia conexões
-        até a implementação da autenticação.
+        Contas com sessões autenticadas, perfis, criação, edição e arquivamento
+        de campanhas, convites e permissões por campanha estão implementados no
+        PostgreSQL. Recuperação de senha depende de SMTP configurado. O serviço
+        de tempo real continua bloqueado; a mesa virtual ainda não foi iniciada.
       </p>
       <h2>Próximos capítulos</h2>
       <ol>
         <li>
-          Sistema inicial: contas, campanhas, convites, fichas básicas, mesa
-          PixiJS, dados e sincronização.
+          Restante do sistema inicial: fichas básicas, mesa PixiJS, dados e sincronização,
+          após validação do núcleo de usuários e campanhas.
         </li>
         <li>
           Sistema de RPG: fichas completas, regras, biblioteca, inventário e

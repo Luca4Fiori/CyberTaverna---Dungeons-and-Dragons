@@ -640,3 +640,94 @@ html[data-quality="low"] .hero-grid {
     line-height: 1.6;
   }
 }
+
+/* Núcleo de contas e campanhas */
+.core-form {
+  max-width: 660px;
+  margin: 24px 0;
+}
+.core-form fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.core-form label {
+  display: block;
+  margin: 18px 0;
+  color: #c5d2df;
+  line-height: 1.7;
+}
+.core-form input:not([type="checkbox"]),
+.core-form textarea,
+.share-link {
+  display: block;
+  width: 100%;
+  margin-top: 7px;
+  padding: 12px;
+  color: #f1ede5;
+  background: #182230;
+  border: 1px solid #a6dcef40;
+  border-radius: 5px;
+}
+.core-form input[type="checkbox"] {
+  margin-left: 14px;
+  accent-color: #d3ae63;
+}
+button {
+  cursor: pointer;
+}
+button:disabled,
+fieldset:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.inline-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  align-items: center;
+  margin: 24px 0;
+  color: #a6dcef;
+}
+.form-error {
+  color: #ffb9b9;
+}
+.form-success {
+  color: #b7dfc0;
+}
+.core-section {
+  padding: 22px;
+  margin: 28px 0;
+  background: #151e2b;
+  border: 1px solid #d3ae6326;
+  border-radius: 6px;
+}
+.core-section > p {
+  color: #a8b7c7;
+  line-height: 1.7;
+}
+.member-list {
+  list-style: none;
+  padding: 0;
+}
+.member-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid #ffffff12;
+  padding: 16px 0;
+  flex-wrap: wrap;
+}
+.preserve-lines {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.campaign-list {
+  margin-top: 28px;
+}
+.campaign-list h2,
+.campaign-list p {
+  overflow-wrap: anywhere;
+}

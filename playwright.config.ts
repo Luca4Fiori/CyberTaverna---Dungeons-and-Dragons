@@ -1,8 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
+import { testDatabaseUrl } from "./tests/database";
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
-  use: { baseURL: "http://localhost:3000", trace: "retain-on-failure" },
+  use: { baseURL: "http://localhost:3100", trace: "retain-on-failure" },
   projects: [
     {
       name: "desktop",
@@ -18,9 +19,16 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev:web",
-    url: "http://localhost:3000/api/health/live",
-    reuseExistingServer: !process.env.CI,
+    command:
+      "node -r dotenv/config node_modules/next/dist/bin/next dev apps/web --hostname 127.0.0.1 --port 3100",
+    url: "http://localhost:3100/api/health/ready",
+    env: {
+      DATABASE_URL: testDatabaseUrl(),
+      APP_URL: "http://localhost:3100",
+      SMTP_URL: "smtp://127.0.0.1:1025",
+      MAIL_FROM: "ct-rpg@example.test",
+    },
+    reuseExistingServer: false,
     timeout: 120000,
   },
 });

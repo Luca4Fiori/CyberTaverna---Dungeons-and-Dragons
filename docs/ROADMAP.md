@@ -11,7 +11,7 @@ Legenda: [x] implementado, [ ] pendente. Verificação não executada não equiv
 - [x] PostgreSQL via Compose, esquema Prisma e migração inicial.
 - [x] Serviço Socket.IO separado com origem restrita e bloqueio de autenticação pendente.
 - [x] Scripts, variáveis de exemplo, lint, formatação, testes unitários/integração/E2E.
-- [ ] Validar migração em PostgreSQL local e registrar resultados finais das verificações.
+- [x] Validar migração em PostgreSQL local e registrar resultados finais das verificações.
 
 Aceitação: instalar com lockfile, gerar/validar Prisma, aplicar migração, executar lint/tipos/testes/build, navegar em desktop/mobile e verificar que realtime não aceita cliente anônimo. Não inclui usuários jogando; isso pertence à etapa 1.
 
@@ -32,6 +32,10 @@ Aceitação: instalar com lockfile, gerar/validar Prisma, aplicar migração, ex
 Próxima ação: iniciar Docker Desktop/engine Linux, executar `npm run services:up` e `npm run db:deploy`, verificar tabelas e constraints; depois implementar autenticação e campanha com dois usuários reais de teste.
 
 ## Etapa 1 — Sistema funcional inicial
+
+### Revalidação da fundação antes da Etapa 1 — 26/10/2026
+
+Docker Desktop iniciado; engine 28.4.0. A porta 5432 pertence ao container de outro projeto (`rollod20-postgres`), preservado. Compose do CT RPG agora usa porta configurável, padrão 5433. PostgreSQL 17 saudável; conexão real e migração `202610260001_foundation` aplicadas. Typecheck, lint, 21 testes unitários/integração, 4 casos E2E desktop/mobile e build aprovados. O bloqueio de banco registrado acima é histórico e foi resolvido.
 
 - [ ] Cadastro/login/logout/perfil/dashboard, hash de senha, sessão/CSRF/rate limit e suspensão.
 - [ ] Campanhas CRUD/arquivo, membros, papel por campanha e convites atômicos.

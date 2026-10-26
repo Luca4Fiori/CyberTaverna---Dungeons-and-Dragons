@@ -6,6 +6,6 @@ export default defineConfig({
   datasource: {
     url:
       process.env.DATABASE_URL ??
-      "postgresql://ct_rpg:ct_rpg_local@localhost:5432/ct_rpg",
+      "postgresql://ct_rpg:ct_rpg_local@localhost:5433/ct_rpg",
   },
 });

@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   description: "Uma nova casa para suas aventuras de RPG de mesa.",
 };
 const navigation = [
+  { href: "/dashboard", label: "Minha conta", icon: Users },
   { href: "/", label: "Visão geral", icon: Compass },
   { href: "/campanhas", label: "Campanhas", icon: Users },
   { href: "/personagens", label: "Personagens", icon: ScrollText },
@@ -49,7 +50,7 @@ export default function RootLayout({
             ))}
           </nav>
           <div className="sidebar-note">
-            <span className="status-dot" /> Fundação em desenvolvimento
+            <span className="status-dot" /> Núcleo de usuários e campanhas
             <p>
               Um mundo de possibilidades.
               <br />
@@ -63,7 +64,7 @@ export default function RootLayout({
         <div className="workspace">
           <header className="topbar">
             <span>SEU PONTO DE ENCONTRO À BEIRA DO IMPOSSÍVEL</span>
-            <span className="badge">ETAPA 0 · FUNDAÇÃO</span>
+            <span className="badge">ETAPA 1 · NÚCLEO</span>
           </header>
           <main id="conteudo">{children}</main>
           <footer>

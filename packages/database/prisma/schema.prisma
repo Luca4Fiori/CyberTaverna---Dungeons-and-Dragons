@@ -1,0 +1,223 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/client"
+  moduleFormat = "cjs"
+}
+datasource db {
+  provider = "postgresql"
+}
+enum GlobalRole {
+  USER
+  ADMIN
+}
+enum CampaignRole {
+  GM
+  PLAYER
+}
+enum SessionStatus {
+  PLANNED
+  ACTIVE
+  FINISHED
+  CANCELLED
+}
+model User {
+  id           String @id @default(uuid()) @db.Uuid
+  email        String @unique @db.VarChar(254)
+  passwordHash String
+  displayName  String @db.VarChar(80)
+  globalRole   GlobalRole @default(USER)
+  suspendedAt  DateTime? @db.Timestamptz(3)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+  profile      UserProfile?
+  sessions     Session[]
+  memberships  CampaignMember[]
+  audits       AuditLog[]
+}
+model UserProfile {
+  userId        String @id @db.Uuid
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timezone      String @default("America/Sao_Paulo")
+  reducedMotion Boolean @default(false)
+  effects       Boolean @default(true)
+  visualQuality String @default("medium")
+}
+model Session {
+  id        String @id @default(uuid()) @db.Uuid
+  tokenHash String @unique
+  userId    String @db.Uuid
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([userId, expiresAt])
+}
+model Campaign {
+  id          String @id @default(uuid()) @db.Uuid
+  name        String @db.VarChar(120)
+  description String @default("")
+  archivedAt  DateTime? @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+  members     CampaignMember[]
+  settings    CampaignSettings?
+  invites     CampaignInvite[]
+  characters  Character[]
+  sessions    GameSession[]
+  maps        BattleMap[]
+  notes       CampaignNote[]
+  assets      UploadedAsset[]
+  audits      AuditLog[]
+}
+model CampaignMember {
+  campaignId String @db.Uuid
+  userId     String @db.Uuid
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user       User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role       CampaignRole @default(PLAYER)
+  joinedAt   DateTime @default(now()) @db.Timestamptz(3)
+  characters Character[]
+  tokens     Token[]
+  notes      CampaignNote[]
+  @@id([campaignId, userId])
+  @@index([userId])
+}
+model CampaignSettings {
+  campaignId String @id @db.Uuid
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  playersCanCreateCharacters Boolean @default(true)
+  playersCanEditCharacters Boolean @default(true)
+  homebrewEnabled Boolean @default(false)
+  ruleOverrides Json @default("{}")
+}
+model CampaignInvite {
+  id String @id @default(uuid()) @db.Uuid
+  campaignId String @db.Uuid
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  tokenHash String @unique
+  expiresAt DateTime @db.Timestamptz(3)
+  revokedAt DateTime? @db.Timestamptz(3)
+  maxUses Int?
+  useCount Int @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([campaignId, expiresAt])
+}
+model Character {
+  id String @id @default(uuid()) @db.Uuid
+  campaignId String @db.Uuid
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  ownerId String @db.Uuid
+  owner CampaignMember @relation(fields: [campaignId, ownerId], references: [campaignId, userId], onDelete: Restrict)
+  name String @db.VarChar(120)
+  level Int @default(1)
+  experience Int @default(0)
+  hitPoints Int @default(1)
+  maxHitPoints Int @default(1)
+  temporaryHitPoints Int @default(0)
+  armorClass Int @default(10)
+  version Int @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  attributes CharacterAttribute[]
+  history CharacterHistory[]
+  @@unique([campaignId, id])
+  @@index([campaignId, ownerId])
+}
+model CharacterAttribute {
+  characterId String @db.Uuid
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  ability String @db.VarChar(3)
+  score Int @default(10)
+  @@id([characterId, ability])
+}
+model CharacterHistory {
+  id String @id @default(uuid()) @db.Uuid
+  characterId String @db.Uuid
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  actorId String @db.Uuid
+  version Int
+  changes Json
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@unique([characterId, version])
+}
+model GameSession {
+  id String @id @default(uuid()) @db.Uuid
+  campaignId String @db.Uuid
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  title String @db.VarChar(120)
+  description String @default("")
+  scheduledAt DateTime? @db.Timestamptz(3)
+  status SessionStatus @default(PLANNED)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  @@unique([campaignId, id])
+  @@index([campaignId, scheduledAt])
+}
+model BattleMap {
+  id String @id @default(uuid()) @db.Uuid
+  campaignId String @db.Uuid
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name String @db.VarChar(120)
+  gridSize Int @default(64)
+  width Int @default(2048)
+  height Int @default(2048)
+  visible Boolean @default(false)
+  version Int @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  tokens Token[]
+  @@unique([campaignId, id])
+}
+model Token {
+  id String @id @default(uuid()) @db.Uuid
+  campaignId String @db.Uuid
+  mapId String @db.Uuid
+  map BattleMap @relation(fields: [campaignId, mapId], references: [campaignId, id], onDelete: Cascade)
+  controllerId String? @db.Uuid
+  controller CampaignMember? @relation(fields: [campaignId, controllerId], references: [campaignId, userId], onDelete: Restrict)
+  name String @db.VarChar(120)
+  x Float @default(0)
+  y Float @default(0)
+  size Float @default(1)
+  rotation Float @default(0)
+  visible Boolean @default(false)
+  version Int @default(0)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  @@index([campaignId, mapId, visible])
+}
+model CampaignNote {
+  id String @id @default(uuid()) @db.Uuid
+  campaignId String @db.Uuid
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  authorId String @db.Uuid
+  author CampaignMember @relation(fields: [campaignId, authorId], references: [campaignId, userId], onDelete: Restrict)
+  title String @db.VarChar(120)
+  body String
+  private Boolean @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  @@index([campaignId, private])
+}
+model UploadedAsset {
+  id String @id @default(uuid()) @db.Uuid
+  campaignId String @db.Uuid
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  storageKey String @unique
+  mimeType String
+  sizeBytes BigInt
+  originalName String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([campaignId])
+}
+model AuditLog {
+  id String @id @default(uuid()) @db.Uuid
+  actorId String? @db.Uuid
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  campaignId String? @db.Uuid
+  campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  action String
+  entityId String?
+  metadata Json @default("{}")
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([campaignId, createdAt])
+  @@index([actorId, createdAt])
+}

@@ -1,0 +1,59 @@
+{
+  "name": "ct-rpg",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n web,realtime \"npm:dev:web\" \"npm:dev:realtime\"",
+    "dev:web": "next dev apps/web",
+    "dev:realtime": "tsx watch --env-file=.env apps/realtime/src/index.ts",
+    "build": "next build apps/web && tsc -p apps/realtime/tsconfig.json",
+    "start:web": "next start apps/web",
+    "start:realtime": "node --env-file=.env dist/apps/realtime/src/index.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit -p apps/web/tsconfig.json && tsc --noEmit -p apps/realtime/tsconfig.json",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "db:generate": "prisma generate",
+    "db:validate": "prisma validate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "services:up": "docker compose up -d",
+    "services:down": "docker compose down"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "dotenv": "18.0.9",
+    "lucide-react": "1.61.0",
+    "next": "16.4.3",
+    "pg": "8.23.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "socket.io": "4.8.4",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "22.20.5",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "concurrently": "10.0.6",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.3",
+    "prettier": "3.9.10",
+    "prisma": "7.10.1",
+    "socket.io-client": "4.8.4",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "5.0.5"
+  }
+}

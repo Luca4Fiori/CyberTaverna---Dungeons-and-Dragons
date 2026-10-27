@@ -37,13 +37,15 @@ Próxima ação: iniciar Docker Desktop/engine Linux, executar `npm run services
 
 Docker Desktop iniciado; engine 28.4.0. A porta 5432 pertence ao container de outro projeto (`rollod20-postgres`), preservado. Compose do CT RPG agora usa porta configurável, padrão 5433. PostgreSQL 17 saudável; conexão real e migração `202610260001_foundation` aplicadas. Typecheck, lint, 21 testes unitários/integração, 4 casos E2E desktop/mobile e build aprovados. O bloqueio de banco registrado acima é histórico e foi resolvido.
 
-- [ ] Cadastro/login/logout/perfil/dashboard, hash de senha, sessão/CSRF/rate limit e suspensão.
-- [ ] Campanhas CRUD/arquivo, membros, papel por campanha e convites atômicos.
-- [ ] Fichas básicas e permissões de edição, histórico e ajustes pelo mestre.
+- [x] Cadastro/login/logout/perfil/dashboard, hash de senha, sessão/CSRF/rate limit e bloqueio de contas suspensas (painel de suspensão ainda pendente).
+- [x] Criar/consultar/editar/arquivar campanhas, papel por campanha e convites atômicos.
+- [ ] Excluir campanhas e gerenciar remoção/promoção de membros.
+- [x] Fichas básicas persistidas, permissões, histórico, versão esperada e edição de todos os campos pelo mestre.
+- [x] Sala de preparação persistida com participação de mestre e jogador; não é mesa virtual nem presença online.
 - [ ] Upload validado local/S3, mapas e mesa PixiJS com tokens autorizados.
 - [ ] Dados oficiais no servidor e histórico com visibilidades.
 - [ ] Autenticação Socket.IO, salas, eventos autorizados, persistência, conflitos e ressincronização.
-- [ ] Testes PostgreSQL e E2E com dois usuários, proibição de acesso entre campanhas.
+- [x] Testes PostgreSQL e E2E do núcleo com dois usuários e proibição de acesso entre campanhas; testes de mesa/sincronização permanecem pendentes.
 
 Aceitação: mestre e jogador entram na mesma campanha, persistem ficha/mapa, movem somente tokens permitidos, rolam dados e recuperam estado após reconectar/reiniciar; terceiro usuário não acessa recursos secretos.
 
@@ -72,7 +74,8 @@ Aceitação: nenhum segredo em payload de jogador, conflitos tratados, operaçõ
 - [ ] Conteúdo homebrew editável e associado a campanhas, políticas e denúncia.
 - [ ] Chat público/privado, notas do mestre, diário/eventos/resumos/agenda/notificações.
 - [ ] Admin separado: contas/suspensão, campanhas, denúncias/moderação, conteúdo global, armazenamento/limites/relatórios/configurações/auditoria.
-- [ ] Comando seguro para primeiro admin, recuperação SMTP quando configurada.
+- [x] Recuperação SMTP com tokens de uso único e revogação das sessões.
+- [ ] Comando seguro para primeiro administrador.
 - [ ] Personalizações, neve/gelo/magia/efeitos de habilidade/dados; preparar áudio/clima/Three.js/iluminação dinâmica.
 
 Aceitação: permissões e privacidade testadas, arquivos validados, fluxos completos persistidos e administração inacessível ao GM comum.
@@ -86,3 +89,27 @@ Aceitação: permissões e privacidade testadas, arquivos validados, fluxos comp
 - [ ] Configurar domínio/hospedagem somente após autorização explícita.
 
 Aceitação: checklist de operação validado, RPO/RTO definidos e restauração demonstrada; publicação autorizada separadamente.
+
+### Inspeção e validação — 27/10/2026
+
+Commits examinados: fee1166 (núcleo de campanhas e serviços) e b2787f3 (estrutura inicial). Autenticação, perfil, campanhas e convites já estavam implementados e foram preservados. Documentos anteriores descreviam esses recursos como futuros; README, arquitetura, permissões, API e banco foram corrigidos.
+
+Docker Desktop e PostgreSQL estão saudáveis. Três migrações aplicadas (foundation, auth_recovery, characters_and_session_lobby), confirmadas por consulta SQL real; 20 tabelas no schema public incluindo _prisma_migrations. Banco principal sem usuários de teste. ct_rpg_test separado para os testes; Mailpit local captura recuperação sem email externo.
+
+Implementado neste incremento: classe/espécie manuais, nome, nível/XP, seis atributos/modificadores, PV atuais/máximos/temporários e CA; gravação e edição PostgreSQL; controles de criação/edição pelo mestre; histórico e conflito de versão; navegação de fichas e sala compartilhada. Sem catálogo proprietário ou tradução de terceiros. Atribuição SRD 5.2.1 incluída.
+
+Validação intermediária: Prisma validate, typecheck, lint, build e 45 testes unitários/integração aprovados. Primeira rodada E2E teve 10 aprovações e dois erros de seletor no novo teste (rótulo do botão de convite); corrigidos para nova execução. Resultado final registrado abaixo.
+
+A etapa 1 completa continua aberta: faltam arquivos, mapas/tokens, dados oficiais e sincronização Socket.IO. Este incremento não implementa a mesa virtual. Também pendentes: magias/inventário/habilidades/evolução automática, UI de histórico, delegação individual de fichas, exclusão de campanha/membros e recursos administrativos. Sala lista até 50 sessões e 100 participantes; seleção de ficha usa primeira página de 20. Recuperação externa depende de SMTP configurado; restauração de backups e produção não validadas.
+
+### Resultado final deste incremento
+
+- Prisma validate e três migrações aplicadas: aprovados; PostgreSQL real confirmado por SQL.
+- Typecheck, ESLint e Prettier: aprovados.
+- Vitest: **45/45 testes aprovados**, incluindo autenticação/recuperação, isolamento de campanhas, fichas/atributos, persistência/histórico, versão esperada, permissões do mestre/jogador, bloqueio por arquivamento e participação autorizada na sala.
+- Build de produção Next.js e compilação do realtime: aprovados.
+- Playwright/Edge: **12/12 casos aprovados** em desktop/mobile. Fluxo completo: contas autenticadas, campanha, convite, criação de ficha pelo jogador, edição pelo mestre, recarga com dados persistidos e registro dos dois na mesma sessão. Recuperação testada com SMTP Mailpit real.
+- Os erros iniciais de teste foram corrigidos: rótulo do convite e espera pela URL da sala antes de compartilhá-la. Execução com permissões locais de processo resolveu o encerramento do servidor gerenciado no Windows; nenhum processo externo foi encerrado.
+- Sem push, publicação, alteração de DNS ou infraestrutura externa.
+
+Próximo passo recomendado: evoluir a ficha modular com inventário, recursos e magias licenciadas, ampliar testes de regras e acesso; depois integrar autenticação/salas Socket.IO reutilizando os serviços validados. Mesa virtual completa permanece fora desta tarefa.

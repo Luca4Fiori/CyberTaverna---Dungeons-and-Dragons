@@ -280,3 +280,100 @@ test("recuperação envia email ao SMTP local, usa link uma vez e encerra sessõ
     data: { IDs: [messageId] },
   });
 });
+
+test("fluxo RPG: convite, ficha do jogador, edição do mestre e sessão compartilhada", async ({
+  page,
+  browser,
+  run,
+}) => {
+  const gmEmail = `e2e-${run}-gm-rpg@example.test`,
+    playerEmail = `e2e-${run}-player-rpg@example.test`;
+  await register(page.request, gmEmail);
+  await login(page.request, gmEmail);
+  const playerContext = await browser.newContext({ baseURL: origin });
+  const player = await playerContext.newPage();
+  try {
+    await register(player.request, playerEmail);
+    await login(player.request, playerEmail);
+    await page.goto("/campanhas/nova");
+    await page.getByLabel("Nome da campanha").fill("Expedição do gelo");
+    await page
+      .getByRole("button", { name: "Criar campanha", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/campanhas\/[\da-f-]+$/);
+    const campaignId = page.url().split("/").at(-1)!;
+    const inviteResponse = await page.request.post(
+      `/api/campaigns/${campaignId}/invites`,
+      { headers: { Origin: origin }, data: { maxUses: 1 } },
+    );
+    expect(inviteResponse.status()).toBe(201);
+    const invite = await inviteResponse.json();
+    await player.goto(`/convites#${invite.token}`);
+    await player.getByRole("button", { name: "Entrar na campanha" }).click();
+    await expect(player).toHaveURL(new RegExp(`/campanhas/${campaignId}$`));
+    await player
+      .locator("main")
+      .getByRole("link", { name: "Personagens", exact: true })
+      .click();
+    await player
+      .getByRole("link", { name: "Criar personagem", exact: true })
+      .click();
+    await player
+      .getByLabel("Nome do personagem", { exact: true })
+      .fill("Aurora");
+    await player.getByLabel("Classe", { exact: true }).fill("Guerreiro");
+    await player.getByLabel("Espécie", { exact: true }).fill("Humano");
+    await player.getByLabel("Força", { exact: true }).fill("17");
+    await expect(
+      player.getByLabel("Modificador de Força", { exact: true }),
+    ).toHaveText("+3");
+    await player.getByLabel("PV máximos", { exact: true }).fill("12");
+    await player.getByLabel("PV atuais", { exact: true }).fill("12");
+    await player.getByRole("button", { name: "Salvar personagem" }).click();
+    await expect(player).toHaveURL(/\/personagens\/[\da-f-]+$/);
+    const characterUrl = player.url();
+    await page.goto(characterUrl);
+    await page.getByLabel("PV atuais", { exact: true }).fill("7");
+    await page
+      .getByLabel("Nome do personagem", { exact: true })
+      .fill("Aurora do inverno");
+    await page.getByRole("button", { name: "Salvar personagem" }).click();
+    await expect(page.getByText("VERSÃO 1", { exact: true })).toBeVisible();
+    await player.reload();
+    await expect(player.getByLabel("PV atuais", { exact: true })).toHaveValue(
+      "7",
+    );
+    await expect(
+      player.getByLabel("Nome do personagem", { exact: true }),
+    ).toHaveValue("Aurora do inverno");
+    await page.goto(`/campanhas/${campaignId}/sessoes`);
+    await page.getByLabel("Título da sessão").fill("Travessia congelada");
+    await page
+      .getByRole("button", { name: "Criar sessão", exact: true })
+      .click();
+    await page.getByRole("link", { name: "Travessia congelada" }).click();
+    await expect(page).toHaveURL(/\/sessoes\/[\da-f-]+$/);
+    const sessionUrl = page.url();
+    await page.getByRole("button", { name: "Registrar participação" }).click();
+    await expect(page.getByRole("status")).toHaveText(
+      "Participação registrada.",
+    );
+    await player.goto(sessionUrl);
+    await player
+      .getByLabel("Personagem para esta sessão")
+      .selectOption({ label: "Aurora do inverno" });
+    await player
+      .getByRole("button", { name: "Registrar participação" })
+      .click();
+    await expect(player.getByRole("status")).toHaveText(
+      "Participação registrada.",
+    );
+    await page.reload();
+    await expect(page.locator(".member-list li")).toHaveCount(2);
+    await expect(page.locator(".member-list")).toContainText(
+      "Aurora do inverno",
+    );
+  } finally {
+    await playerContext.close();
+  }
+});

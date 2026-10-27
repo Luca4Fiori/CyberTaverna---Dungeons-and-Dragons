@@ -34,3 +34,11 @@ ESLint 9.39.5 está fixado porque os plugins transitivos do eslint-config-next 1
 - https://www.dndbeyond.com/srd
 
 Consulta em 26/10/2026; versões efetivas registradas pelo npm no package-lock.json. Domínio planejado não é prova de controle ou autorização de marca.
+
+## ADR 007 — Fichas básicas e sala de preparação (27/10/2026)
+
+Preservar autenticação/campanhas existentes e reutilizar associação por campanha. Fichas normalizadas, versão otimista e histórico dentro da transação; locks da campanha evitam corrida com arquivamento/permissões. Classe/espécie são texto manual: sem importar catálogos proprietários ou automatizar evolução incompleta. Sala mantém participação relacional, não simula presença online. Magias/inventário/habilidades serão módulos adicionais.
+
+## ADR 008 — Validação no Windows
+
+Carregar dotenv dentro de scripts/web.mjs, sem -r/--env-file herdados pelo Next em NODE_OPTIONS. E2E usa build de produção, PostgreSQL isolado e Mailpit local para recuperação. O servidor de desenvolvimento não é usado como evidência de comportamento do build final.

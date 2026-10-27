@@ -10,7 +10,7 @@ export default function Page() {
       </p>
       <h2>Referência de regras</h2>
       <p>
-        O projeto planeja utilizar o{" "}
+        Os cálculos básicos de atributos e proficiência usam como referência o{" "}
         <a href="https://www.dndbeyond.com/srd">
           System Reference Document 5.2.1
         </a>
@@ -19,8 +19,21 @@ export default function Page() {
           Creative Commons Attribution 4.0
         </a>
         . Nenhum corpus de regras ou tradução foi importado nesta etapa. A
-        atribuição exigida e a procedência serão incluídas antes de cada
-        importação.
+        interface em português foi escrita para este projeto. Classe e espécie
+        são preenchidas manualmente, sem catálogo importado.
+      </p>
+      <p lang="en">
+        This work includes material from the System Reference Document 5.2.1
+        (“SRD 5.2.1”) by Wizards of the Coast LLC, available at{" "}
+        <a href="https://www.dndbeyond.com/srd">
+          https://www.dndbeyond.com/srd
+        </a>
+        . The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0
+        International License, available at{" "}
+        <a href="https://creativecommons.org/licenses/by/4.0/legalcode">
+          https://creativecommons.org/licenses/by/4.0/legalcode
+        </a>
+        .
       </p>
       <h2>Conteúdo dos usuários</h2>
       <p>

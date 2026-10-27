@@ -1,20 +1,20 @@
 # Permissões
 
-## Implementado
+A identidade global não concede papel de mestre. A sessão válida, suspensão, associação à campanha e ação são verificadas pelo servidor em cada operação.
 
-Funções puras `canManageCampaign` e `canMoveToken`, cobertas por testes de isolamento. Ainda não estão ligadas a CRUD, pois CRUD não existe. Realtime bloqueia todas as conexões com AUTH_NOT_IMPLEMENTED.
+| Recurso atual                     | Mestre da campanha                             | Jogador membro                   | Não membro |
+| --------------------------------- | ---------------------------------------------- | -------------------------------- | ---------- |
+| Campanha e lista de participantes | Ler/editar/arquivar                            | Ler                              | Negado     |
+| Criar/listar/revogar convites     | Sim                                            | Não                              | Não        |
+| Fichas                            | Ler/criar/editar todas, transferir para membro | Próprias, conforme configuração  | Negado     |
+| Configurações de fichas           | Sim                                            | Não                              | Não        |
+| Criar sessão/alterar estado (API) | Sim                                            | Não                              | Não        |
+| Sala e participantes registrados  | Ler/participar                                 | Ler/participar com ficha própria | Negado     |
 
-## Contrato para implementação
+Um usuário pode ser GM em A e PLAYER em B. Conhecer um ID não concede acesso. Jogadores não recebem fichas de outros jogadores; na sala recebem somente identificação do personagem e nome do participante. Cadastro aceita apenas campos permitidos, cria USER e rejeita globalRole. ADMIN não ganha acesso implícito a campanhas privadas. Painel administrativo ainda pendente.
 
-| Ação                            | Administrador global            | GM da campanha            | Jogador membro       |
-| ------------------------------- | ------------------------------- | ------------------------- | -------------------- |
-| Contas, suspensão, moderação    | Sim, com auditoria              | Não                       | Não                  |
-| Configurar campanha e membros   | Sem acesso implícito a segredos | Sim                       | Não                  |
-| Editar fichas                   | Sem acesso implícito            | Todas da campanha         | Própria se permitido |
-| Mover token                     | Sem acesso implícito            | Todos da campanha         | Somente controlados  |
-| Notas secretas                  | Sem acesso implícito            | Conforme autoria/política | Não                  |
-| Regras públicas e mapa liberado | Sim                             | Sim                       | Sim                  |
+Arquivamento mantém consulta e bloqueia escrita de fichas, convites e sessões; reativação não restaura convites revogados. Configurações podem bloquear criação/edição de fichas para jogadores, sem restringir intervenção do mestre. Não existe delegação individual de ficha a outro jogador nesta etapa. Transferência de dono só para membro, pelo mestre, e remove associação da ficha das participações antigas.
 
-Não existe papel global de mestre. Requisições devem consultar sessão válida, suspensão, associação e ação. IDs fornecidos pelo cliente não concedem autoridade. Objetos invisíveis e notas privadas são filtrados no servidor antes de serializar; nunca enviar todos os objetos para esconder no cliente.
+Tokens de autenticação, recuperação e convites persistem apenas em hash. Mutação exige origem exata APP_URL e JSON, possui limite de corpo e rate limit. Recuperação é única e expira; redefine senha e revoga sessões. Cadastro público nunca promove administrador.
 
-Mutação autenticada por cookie verificará origem e proteção CSRF; logins/convites/uploads terão rate limit. Admin não será aceito em payload público; provisionamento futuro por comando local explícito com auditoria e sem senha padrão. Testes futuros cobrirão IDOR, expiração, usuário suspenso, revogação e privilégios cruzados.
+Testes cobrem expiração, suspensão, logout, recuperação concorrente, convites concorrentes, papéis cruzados, IDOR de fichas/salas, proprietário, configurações, versão concorrente e arquivamento. Realtime permanece fechado com AUTH_NOT_IMPLEMENTED. Políticas puras de movimento já têm testes, mas nenhum movimento de token está disponível.

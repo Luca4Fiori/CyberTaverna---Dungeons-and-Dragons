@@ -9,7 +9,7 @@ import { type Database, type Transaction, sessionUser } from "./auth";
 import { DomainError, unavailable } from "./errors";
 import { newToken, tokenHash } from "./security";
 
-async function membership(
+export async function membership(
   tx: Database | Transaction,
   token: string | undefined,
   campaignId: string,
@@ -30,11 +30,11 @@ async function membership(
     );
   return { user, member };
 }
-async function lockCampaign(tx: Transaction, campaignId: string) {
+export async function lockCampaign(tx: Transaction, campaignId: string) {
   idSchema.parse(campaignId);
   await tx.$queryRaw`SELECT id FROM "Campaign" WHERE id = ${campaignId}::uuid FOR UPDATE`;
 }
-function requireActive(archivedAt: Date | null) {
+export function requireActive(archivedAt: Date | null) {
   if (archivedAt)
     throw new DomainError(409, "ARCHIVED", "Esta campanha está arquivada.");
 }

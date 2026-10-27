@@ -13,3 +13,7 @@ Eventos futuros: `session:join`, `session:leave`, `session:state`, `token:move`,
 Acknowledgement futuro `{ ok, version, error? }`; atualizar banco em transação antes do ack e emissão. Movimento usa expectedVersion; alteração concorrente retorna conflito e snapshot autorizado. Cliente pode interpolar localmente, mas deve reconciliar com estado oficial. Reconexão refaz autenticação e recupera snapshot persistido, não depende de eventos perdidos.
 
 Dados secretos exigem projeção por destinatário ou canais privados, não broadcast irrestrito. Rolagens oficiais usarão node:crypto.randomInt no servidor e registro transacional; públicas, privadas e GM terão políticas distintas. Implementar limites e idempotência antes de permitir eventos de jogo.
+
+## Sala compartilhada disponível via HTTP
+
+A sala de preparação permite criar sessão, consultar e registrar participantes com personagem autorizado. Persiste em PostgreSQL e exige atualização da página para novas alterações. Não há presença online, emissão de eventos ou sincronização de fichas por socket. Essa implementação não altera o bloqueio atual do realtime.

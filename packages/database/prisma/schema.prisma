@@ -95,6 +95,7 @@ model CampaignMember {
   characters Character[]
   tokens     Token[]
   notes      CampaignNote[]
+  attendance GameSessionParticipant[]
   @@id([campaignId, userId])
   @@index([userId])
 }
@@ -125,6 +126,8 @@ model Character {
   ownerId String @db.Uuid
   owner CampaignMember @relation(fields: [campaignId, ownerId], references: [campaignId, userId], onDelete: Restrict)
   name String @db.VarChar(120)
+  className String @default("") @db.VarChar(80)
+  species String @default("") @db.VarChar(80)
   level Int @default(1)
   experience Int @default(0)
   hitPoints Int @default(1)
@@ -136,6 +139,7 @@ model Character {
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
   attributes CharacterAttribute[]
   history CharacterHistory[]
+  attendance GameSessionParticipant[]
   @@unique([campaignId, id])
   @@index([campaignId, ownerId])
 }
@@ -164,10 +168,24 @@ model GameSession {
   description String @default("")
   scheduledAt DateTime? @db.Timestamptz(3)
   status SessionStatus @default(PLANNED)
+  participants GameSessionParticipant[]
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
   @@unique([campaignId, id])
   @@index([campaignId, scheduledAt])
+}
+model GameSessionParticipant {
+  campaignId String @db.Uuid
+  sessionId String @db.Uuid
+  userId String @db.Uuid
+  characterId String? @db.Uuid
+  session GameSession @relation(fields: [campaignId, sessionId], references: [campaignId, id], onDelete: Cascade)
+  member CampaignMember @relation(fields: [campaignId, userId], references: [campaignId, userId], onDelete: Cascade)
+  character Character? @relation(fields: [campaignId, characterId], references: [campaignId, id], onDelete: Restrict)
+  joinedAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  @@id([campaignId, sessionId, userId])
+  @@index([campaignId, characterId])
 }
 model BattleMap {
   id String @id @default(uuid()) @db.Uuid

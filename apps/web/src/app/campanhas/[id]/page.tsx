@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { z } from "zod";
 import { viewer } from "@/server/viewer";
-import { campaigns } from "@/server/core";
+import { campaigns, characters } from "@/server/core";
 import { CoreForm } from "@/components/core-form";
 import { Invites } from "@/components/invites";
 import { DomainError } from "../../../../../../packages/domain/src/errors";
@@ -20,6 +21,7 @@ export default async function Page({
   });
   const invites =
     campaign.role === "GM" ? await service.invites(token, id) : [];
+  const policy = await characters().policy(token, id);
   return (
     <>
       <p className="eyebrow">
@@ -27,12 +29,41 @@ export default async function Page({
         {campaign.archivedAt ? "ARQUIVADA" : "ATIVA"}
       </p>
       <h1>{campaign.name}</h1>
+      <div className="inline-links">
+        <Link className="button primary" href={`/campanhas/${id}/personagens`}>
+          Personagens
+        </Link>
+        <Link className="button" href={`/campanhas/${id}/sessoes`}>
+          Sessões
+        </Link>
+      </div>
       <p className="lead preserve-lines">
         {campaign.description || "Sem descrição."}
       </p>
       {campaign.role === "GM" && (
         <section className="core-section">
           <h2>Configurações da campanha</h2>
+          {!campaign.archivedAt && (
+            <CoreForm
+              endpoint={`/api/campaigns/${id}/character-settings`}
+              method="PATCH"
+              label="Salvar permissões das fichas"
+              fields={[
+                {
+                  name: "playersCanCreateCharacters",
+                  label: "Jogadores podem criar personagens",
+                  type: "checkbox",
+                  checked: policy.playersCanCreateCharacters,
+                },
+                {
+                  name: "playersCanEditCharacters",
+                  label: "Jogadores podem editar suas fichas",
+                  type: "checkbox",
+                  checked: policy.playersCanEditCharacters,
+                },
+              ]}
+            />
+          )}
           <CoreForm
             endpoint={`/api/campaigns/${id}`}
             method="PATCH"

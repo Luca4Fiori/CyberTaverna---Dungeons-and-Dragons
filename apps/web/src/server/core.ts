@@ -2,6 +2,8 @@ import "server-only";
 import { createDatabase } from "../../../../packages/database/src/index";
 import { createAuthService } from "../../../../packages/domain/src/auth";
 import { createCampaignService } from "../../../../packages/domain/src/campaigns";
+import { createCharacterService } from "../../../../packages/domain/src/characters";
+import { createGameSessionService } from "../../../../packages/domain/src/game-sessions";
 import nodemailer from "nodemailer";
 const globalDb = globalThis as unknown as {
   ctDatabase?: ReturnType<typeof createDatabase>;
@@ -61,3 +63,5 @@ export function auth() {
   return createAuthService(database(), mailer);
 }
 export const campaigns = () => createCampaignService(database());
+export const characters = () => createCharacterService(database());
+export const gameSessions = () => createGameSessionService(database());

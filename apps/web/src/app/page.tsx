@@ -86,7 +86,9 @@ export default function HomePage() {
             <p className="eyebrow">{tag}</p>
             <h3>{title}</h3>
             <p>{copy}</p>
-            <span className="small-tag">{href === "/campanhas" ? "Disponível" : "Em preparação"}</span>
+            <span className="small-tag">
+              {href !== "/biblioteca" ? "Disponível" : "Em preparação"}
+            </span>
           </Link>
         ))}
       </div>
@@ -95,8 +97,8 @@ export default function HomePage() {
         <div>
           <h3>Construindo uma base para grandes histórias</h3>
           <p>
-            Contas, perfis e campanhas já estão disponíveis. A mesa virtual e
-            as partidas online fazem parte das próximas entregas.
+            Contas, perfis e campanhas já estão disponíveis. A mesa virtual e as
+            partidas online fazem parte das próximas entregas.
           </p>
         </div>
         <Link href="/status">

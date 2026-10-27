@@ -1,34 +1,37 @@
 # Arquitetura
 
-## Estado implementado
+## Implementação atual
 
-Monorepo de diretórios com um manifesto npm e lockfile: reduz configuração inicial, mantém módulos separados e tipos compartilhados. Next.js App Router entrega páginas públicas estáticas e endpoint de saúde. Serviço Socket.IO dedicado mantém seu próprio ciclo de vida Node. PostgreSQL 17 com Prisma 7; driver pg via PrismaPg. TypeScript strict e noUncheckedIndexedAccess.
+Monorepo de diretórios com manifesto e lockfile únicos. Next.js App Router/React entrega páginas públicas e autenticadas, componentes cliente para formulários e route handlers REST. TypeScript strict/noUncheckedIndexedAccess, Tailwind e Lucide. PostgreSQL 17, Prisma 7 com adaptador pg. Socket.IO fica em processo separado e ainda recusa handshakes de jogo.
 
 ```mermaid
 flowchart LR
-  Navegador --> Web[Next.js :3000]
-  Navegador -. etapa 1 .-> RT[Socket.IO :3001]
-  Web -. serviços de domínio .-> Domain[Políticas e casos de uso]
-  RT -. serviços de domínio .-> Domain
-  Domain -. persistência futura .-> DB[(PostgreSQL)]
+ Navegador --> Web[Next.js: páginas e API]
+ Web --> Dominio[Autenticação / campanhas / personagens / sessões]
+ Dominio --> Banco[(PostgreSQL)]
+ Dominio --> SMTP[SMTP configurado para recuperação]
+ Navegador -. integração futura .-> RT[Socket.IO separado]
+ RT -. futuro .-> Dominio
 ```
 
-Linhas pontilhadas são integrações futuras. As páginas atuais não acessam o banco; a fábrica de cliente está preparada. Realtime recusa todos os handshakes de aplicação. Nenhum endpoint CRUD está exposto.
+`packages/contracts` valida entradas Zod; `packages/domain` recebe conexão Prisma, valida identidade, associação e ação, executa transações e auditoria. `server/core` configura serviços e `server/http` trata cookies, origem, corpo limitado e erros. Componentes nunca decidem autorização final. Leituras autenticadas não são cacheadas.
 
-## Arquitetura alvo
+Autenticação: Argon2id, sessões opacas aleatórias de sete dias, só hash do token persistido, cookie HttpOnly/SameSite Lax/Secure no HTTPS. Recuperação usa token de 30 minutos de uso único, SMTP real, revogação dos links anteriores e de todas as sessões ao redefinir. Rate limit atômico no PostgreSQL; não confiar em cabeçalhos de IP fornecidos pelo cliente.
 
-Route handlers REST delegam a serviços de domínio; Socket.IO usa os mesmos serviços e autorização. Não duplicar regras de persistência em eventos. Transações gravam dados e histórico antes de notificar. Eventos terão versão e identificador idempotente; reconexão recupera snapshot filtrado por participante. Outbox transacional e adaptador Redis serão avaliados antes de múltiplas instâncias.
+Campanhas têm papel por associação, convites limitados/revogáveis/expiráveis, arquivamento e auditoria. Operações de campanha serializam decisões críticas por lock transacional da campanha, incluindo convites, fichas e sala. É simples e consistente, mas deverá ser medido sob carga antes de aumentar concorrência.
 
-Sessões opacas, tokens em hash no banco, cookies HttpOnly/Secure/SameSite e senhas com Argon2id. Identidade global separada do papel por campanha. Autenticação será desenvolvida ou integrada a solução mantida na etapa 1 após revisão específica. Nenhum algoritmo de senha é implementado nesta etapa.
+Fichas usam linhas de atributos normalizadas, cálculos independentes em `packages/rules`, versão esperada e histórico transacional. Mestre pode alterar todos os campos e responsável membro; jogador apenas próprios, se habilitado. Classe/espécie e progressão ainda são manuais. A migração preserva fichas anteriores com campos textuais vazios, apresentados como não informados.
 
-PixiJS será carregado somente no cliente da mesa na etapa 1, sem acessar WebGL em SSR. Cena persistida normalizada em mapas/tokens, câmera local, regras independentes. Camadas de efeitos opcionais e Three.js futuro, sem dependência instalada antes de uso real.
+Sessões compartilhadas são salas de preparação persistidas. Participantes referenciam membro e personagem da mesma campanha com FKs compostas. Não representam presença online. Leituras atualizam ao recarregar; atualizações em tempo real, mapas e tokens não foram implementados.
 
-Arquivos: interface de armazenamento local em desenvolvimento e S3 em produção, a implementar. Arquivos privados, chaves não previsíveis, download autorizado, limite de tamanho, validação de assinatura binária e metadados. PDFs apenas de modelos documentados.
+## Evolução planejada
 
-## Qualidade e acessibilidade
+Socket.IO deverá reutilizar autorização e serviços, persistir antes de emitir, filtrar segredos por destinatário, recuperar snapshots e tratar versões/conflitos. Outbox/Redis serão avaliados para múltiplas instâncias. PixiJS será carregado no cliente da mesa; WebGL não deve executar no SSR. Efeitos independentes e Three.js futuro.
 
-HTML semântico, idioma pt-BR, foco visível, link para pular navegação, navegação móvel, preferências locais e prefers-reduced-motion. Não há fontes ou imagens remotas necessárias para o build. CSS cria paisagem original. Recursos futuros terão testes de autorização, integração PostgreSQL e E2E com dois usuários.
+Arquivos local/S3 ainda não implementados: exigirão validação binária, limite, chaves não previsíveis e download autorizado. Magias, inventário e habilidades serão módulos/entidades próprios ligados à ficha, sem substituir persistência por JSON único.
 
-## Operação futura
+## Qualidade e operação
 
-Separar web e realtime no deploy; TLS e proxy para conexões persistentes. Banco e objetos privados. Logs estruturados sem tokens/senhas, métricas de latência, erros e reconexão. Backups PostgreSQL diários e PITR conforme hospedagem; cópias de objetos versionadas e exercício de restauração em ambiente isolado. Definir RPO/RTO antes da produção. Este plano ainda não é infraestrutura implantada.
+Formulários acessíveis, foco, navegação móvel, preferências visuais e redução de movimento; sem fontes remotas no build. Testes reais de PostgreSQL separados em ct_rpg_test e E2E em build de produção. Lançador carrega dotenv sem flags herdadas incompatíveis com processos internos do Next no Windows.
+
+Deploy futuro separará web/realtime, TLS/proxy WebSocket, banco e objetos privados, logs sem tokens, monitoramento e backups/PITR. RPO/RTO e recuperação ainda precisam ser definidos e demonstrados.

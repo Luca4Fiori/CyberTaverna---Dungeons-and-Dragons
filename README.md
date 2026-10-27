@@ -1,15 +1,14 @@
-# CT RPG
+# CyberTaverna — CT RPG
 
-Fundação de uma plataforma VTT em pt-BR. **ETAPA 0: não há autenticação, partidas multiplayer ou CRUD de campanhas disponíveis.** Não há dados de produção nem seed fictício. Consulte [roadmap](docs/ROADMAP.md).
+Plataforma RPG em pt-BR em desenvolvimento. O núcleo de contas e campanhas funciona com PostgreSQL: cadastro, login/logout, perfil, recuperação via SMTP configurado, campanhas, convites, fichas básicas e sala compartilhada de preparação. A mesa virtual e a sincronização de jogo ainda não estão implementadas. Não há contas padrão nem seed de produção. Consulte [roadmap](docs/ROADMAP.md).
 
-## Pré-requisitos
+## Instalação local (PowerShell)
 
-Node.js 22.12+ (linha 22 LTS), npm 10+, Docker Desktop com engine Linux iniciado e Docker Compose. Para E2E, Microsoft Edge instalado; pode-se trocar o canal no playwright.config.ts por Chromium instalado com Playwright.
-
-## Instalação (PowerShell, na raiz)
+Requisitos: Node.js 22.12+, npm, Docker Desktop com engine Linux. Para E2E, Microsoft Edge instalado.
 
 ```powershell
 npm ci
+# Apenas na primeira instalação; preserve sua configuração existente:
 Copy-Item .env.example .env
 npm run services:up
 npm run db:generate
@@ -17,42 +16,39 @@ npm run db:deploy
 npm run dev
 ```
 
-Web: http://localhost:3000. Serviço persistente Socket.IO: http://localhost:3001. Saúde: `/api/health/live` na web e `/health/live` no realtime. As verificações de liveness não certificam conectividade com o banco.
+Abra http://localhost:3000, cadastre duas contas e entre em perfis de navegador separados. O mestre cria uma campanha e um convite; o jogador abre o convite depois do login, cria sua ficha em Personagens; o mestre acessa a mesma ficha. Em Sessões, o mestre cria uma sala e ambos registram sua participação. O jogador seleciona uma ficha própria. Atualizar a página recupera o estado persistido; não há indicador de presença online.
 
-As páginas da fundação podem ser abertas sem PostgreSQL. Persistência deve ser verificada com a migração antes da etapa 1. Nenhuma tela atual grava dados no banco. `.env` é lido pelo Prisma e pelo processo realtime; ao adicionar código servidor Next com variáveis, carregar explicitamente o arquivo raiz ou configurar variáveis no processo de implantação. Nunca expor segredos com prefixo NEXT_PUBLIC.
+PostgreSQL local usa 127.0.0.1:5433 para não interferir com outro banco existente na porta 5432. `POSTGRES_PORT` e `DATABASE_URL` precisam concordar. Web lê o `.env` raiz pelo lançador `scripts/web.mjs`. Saúde do processo: `/api/health/live`; conexão real com banco: `/api/health/ready`. Realtime: localhost:3001, ainda recusa conexões de jogo.
 
-## Comandos
+## Validação
 
 ```powershell
 npm run db:validate
+npm run db:test:prepare
+docker compose --profile mail up -d --wait
 npm run typecheck
 npm run lint
 npm test
 npm run test:e2e
-npm run build
 npm run format:check
 ```
 
-Após o build, executar `npm run start:web` e `npm run start:realtime` em terminais separados. `npm run db:migrate -- --name nome_da_mudanca` cria novas migrações durante desenvolvimento. `db:deploy` aplica migrações versionadas. `services:down` preserva o volume; nunca usar `down -v` se precisar dos dados.
+Testes usam exclusivamente `ct_rpg_test` local, criado/migrado por `db:test:prepare`. Fixtures possuem identificadores únicos e são removidas ao terminar. E2E compila e executa o build de produção em localhost:3100, em desktop/mobile, usando Mailpit local (SMTP 1025; consulta 8025) para verificar recuperação sem enviar email externo. `npm run build` gera web/realtime; depois use `npm run start:web` e `npm run start:realtime` separadamente.
 
-## Organização
+Novas migrações: `npm run db:migrate -- --name nome`. Migrações existentes: `npm run db:deploy`. `services:down` preserva volume; não use `down -v` para dados que deseja manter.
 
-- `apps/web`: Next.js App Router, React, Tailwind e Lucide.
-- `apps/realtime`: processo Node/Socket.IO separado, sem salas abertas nesta etapa.
-- `packages/database`: Prisma, migrações e fábrica de conexão PostgreSQL.
-- `packages/contracts`: validação Zod compartilhada.
-- `packages/domain`: políticas puras de autorização.
-- `packages/rules`: cálculos básicos independentes da interface.
-- `tests`: unitários, integração Socket.IO e E2E.
+## Ambiente e segurança
 
-## Ambiente
+Ativas: `DATABASE_URL`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `APP_URL`, `WEB_ORIGIN`, `REALTIME_PORT`. Recuperação requer `SMTP_URL` e `MAIL_FROM`; sem provedor, retorna indisponibilidade, sem simular envio. Para experimentar localmente, configure `SMTP_URL=smtp://localhost:1025` e um remetente de teste após iniciar Mailpit. Em produção, SMTP externo exige TLS e APP_URL exige HTTPS.
 
-`.env.example` documenta todas as variáveis. Ativas: `DATABASE_URL`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `WEB_ORIGIN`, `REALTIME_PORT`. As demais são reservadas: APP_URL, NEXT_PUBLIC_REALTIME_URL, SESSION_SECRET, STORAGE_DRIVER, STORAGE_LOCAL_PATH, S3_*, SMTP_URL e MAIL_FROM. Não existe integração de upload ou envio de email nesta etapa. Credenciais locais do exemplo não devem ser usadas em produção.
+Sessões usam tokens aleatórios opacos e hash no banco, sem SESSION_SECRET. Cookies HttpOnly/SameSite e Secure em HTTPS; senhas Argon2id; validação de origem/JSON, limite de corpo e rate limit PostgreSQL. Credenciais do exemplo são apenas locais. `NEXT_PUBLIC_REALTIME_URL`, `SESSION_SECRET`, armazenamento e S3 permanecem reservados, não habilitam funcionalidades.
 
-## Documentação
+## Organização e documentação
 
-[Requisitos](docs/REQUISITOS.md) · [Arquitetura](docs/ARQUITETURA.md) · [Banco](docs/BANCO_DE_DADOS.md) · [Permissões](docs/PERMISSOES.md) · [API](docs/API.md) · [Tempo real](docs/TEMPO_REAL.md) · [Roadmap](docs/ROADMAP.md) · [Decisões](docs/DECISOES.md).
+`apps/web`: Next/React; `apps/realtime`: Socket.IO; `packages/domain`: serviços transacionais e autorização; `packages/contracts`: Zod; `packages/database`: Prisma/migrações; `packages/rules`: cálculos; `tests`: unitários, PostgreSQL, realtime e E2E.
+
+[Arquitetura](docs/ARQUITETURA.md) · [Banco](docs/BANCO_DE_DADOS.md) · [Permissões](docs/PERMISSOES.md) · [API](docs/API.md) · [Tempo real](docs/TEMPO_REAL.md) · [Roadmap](docs/ROADMAP.md) · [Requisitos](docs/REQUISITOS.md) · [Decisões](docs/DECISOES.md).
 
 ## Produção futura
 
-Endereço planejado: `https://ct.dungeonsanddragons.com.br`. Nenhum DNS, hospedagem ou publicação foi alterado. Requer HTTPS, proxy WebSocket, origens explícitas, banco privado, armazenamento privado, backups testados, gestão de segredos e revisão dos termos antes de usuários reais. O realtime escuta loopback nesta etapa; ajustar bind apenas com a política de rede da implantação. Autenticação e primeiro administrador serão implementados na etapa 1/4; não há cadastro de administrador nem conta padrão.
+Domínio planejado: https://ct.dungeonsanddragons.com.br. Sem publicação, alteração de DNS ou hospedagem. Faltam revisão operacional, privacidade/termos, backups com restauração, observabilidade, primeiro administrador e infraestrutura TLS. Não há cadastro público de administrador. Não usar esta instalação como serviço público antes desses trabalhos.

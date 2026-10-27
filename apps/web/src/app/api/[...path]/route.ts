@@ -1,6 +1,13 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { appOrigin, auth, campaigns, database } from "@/server/core";
+import {
+  appOrigin,
+  auth,
+  campaigns,
+  database,
+  characters,
+  gameSessions,
+} from "@/server/core";
 import {
   failure,
   json,
@@ -81,6 +88,63 @@ async function handle(request: NextRequest, context: Context) {
       return json(await campaigns().accept(token, body));
     if (path[0] === "campaigns" && path[1]) {
       const id = path[1];
+      if (
+        path.length === 3 &&
+        path[2] === "character-settings" &&
+        method === "PATCH"
+      )
+        return json(await characters().configure(token, id, body));
+      if (path.length === 3 && path[2] === "characters" && method === "POST")
+        return json(await characters().create(token, id, body), 201);
+      if (path.length === 3 && path[2] === "characters" && method === "GET") {
+        const page = z.coerce
+          .number()
+          .int()
+          .min(1)
+          .max(10000)
+          .parse(request.nextUrl.searchParams.get("page") ?? 1);
+        return json(await characters().list(token, id, page));
+      }
+      if (
+        path.length === 4 &&
+        path[2] === "characters" &&
+        path[3] &&
+        method === "GET"
+      )
+        return json(await characters().get(token, id, path[3]));
+      if (
+        path.length === 4 &&
+        path[2] === "characters" &&
+        path[3] &&
+        method === "PATCH"
+      )
+        return json(await characters().update(token, id, path[3], body));
+      if (path.length === 3 && path[2] === "sessions" && method === "GET")
+        return json(await gameSessions().list(token, id));
+      if (path.length === 3 && path[2] === "sessions" && method === "POST")
+        return json(await gameSessions().create(token, id, body), 201);
+      if (
+        path.length === 4 &&
+        path[2] === "sessions" &&
+        path[3] &&
+        method === "GET"
+      )
+        return json(await gameSessions().get(token, id, path[3]));
+      if (
+        path.length === 4 &&
+        path[2] === "sessions" &&
+        path[3] &&
+        method === "PATCH"
+      )
+        return json(await gameSessions().status(token, id, path[3], body));
+      if (
+        path.length === 5 &&
+        path[2] === "sessions" &&
+        path[3] &&
+        path[4] === "join" &&
+        method === "POST"
+      )
+        return json(await gameSessions().join(token, id, path[3], body));
       if (path.length === 2 && method === "GET")
         return json(await campaigns().detail(token, id));
       if (path.length === 2 && method === "PATCH")

@@ -6,14 +6,16 @@ export default function Page() {
       <p>
         Contas com sessões autenticadas, perfis, criação, edição e arquivamento
         de campanhas, convites e permissões por campanha estão implementados no
-        PostgreSQL. Recuperação de senha depende de SMTP configurado. O serviço
-        de tempo real continua bloqueado; a mesa virtual ainda não foi iniciada.
+        PostgreSQL. Fichas básicas com atributos calculados e sala de preparação
+        compartilhada também estão disponíveis. Recuperação de senha depende de
+        SMTP configurado. O serviço de tempo real continua bloqueado; a mesa
+        virtual ainda não foi iniciada.
       </p>
       <h2>Próximos capítulos</h2>
       <ol>
         <li>
-          Restante do sistema inicial: fichas básicas, mesa PixiJS, dados e sincronização,
-          após validação do núcleo de usuários e campanhas.
+          Restante do sistema inicial: mesa PixiJS, dados e sincronização, após
+          validação do núcleo de usuários e campanhas.
         </li>
         <li>
           Sistema de RPG: fichas completas, regras, biblioteca, inventário e

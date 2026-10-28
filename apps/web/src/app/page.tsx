@@ -6,7 +6,6 @@ import {
   Sparkles,
   Sword,
   BookOpen,
-  Radio,
 } from "lucide-react";
 export default function HomePage() {
   return (
@@ -95,14 +94,14 @@ export default function HomePage() {
       <section className="foundation">
         <Shield size={25} />
         <div>
-          <h3>Construindo uma base para grandes histórias</h3>
+          <h3>Seu próximo personagem começa na campanha</h3>
           <p>
-            Contas, perfis e campanhas já estão disponíveis. A mesa virtual e as
-            partidas online fazem parte das próximas entregas.
+            Abra sua campanha, escolha Personagens e crie uma ficha sem perder o
+            caminho de volta ao grupo.
           </p>
         </div>
-        <Link href="/status">
-          Ver progresso <Radio size={16} />
+        <Link href="/campanhas">
+          Ir às campanhas <ArrowUpRight size={16} />
         </Link>
       </section>
     </>

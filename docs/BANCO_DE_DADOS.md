@@ -34,3 +34,7 @@ As migrações foundation, auth_recovery e characters_and_session_lobby estão a
 Email é normalizado no serviço; campanha e primeiro GM são criados atomicamente. Aceite de convite bloqueia a linha de campanha, valida expiração/revogação/usos e grava membro/contador em transação. Arquivamento já está disponível e revoga convites. Exclusão e remoção/transferência de membros ainda não são APIs públicas.
 
 Edições de ficha exigem expectedVersion, incrementam versão e registram antes/depois no histórico na mesma transação. Campos classe/espécie vazios preservam registros legados até preenchimento. Inventário, magias e habilidades continuam pendentes como entidades próprias. Participantes de sessão já estão modelados; participantes de encontros ainda não.
+
+## Migração character_catalog — 28/10/2026
+
+Character recebe classId, speciesId, backgroundId e subclassId opcionais (IDs do catálogo versionado), backgroundName e subclassName com padrão vazio. São referências validadas pelo domínio a dados de código, não FKs para tabelas inexistentes. Rótulos e relações antigos são mantidos integralmente. Migração aditiva testada em tabela temporária de PostgreSQL; sem reset ou alteração de migrações anteriores.

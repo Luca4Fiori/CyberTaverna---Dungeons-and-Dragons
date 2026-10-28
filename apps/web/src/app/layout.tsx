@@ -69,7 +69,7 @@ export default function RootLayout({
           <main id="conteudo">{children}</main>
           <footer>
             CT RPG <span>Feito para histórias compartilhadas.</span>
-            <Link href="/status">Estado do projeto</Link>
+            <Link href="/status">Desenvolvimento: estado do projeto</Link>
           </footer>
         </div>
       </body>

@@ -26,3 +26,9 @@ Base `/api`, JSON, sem cache de respostas privadas. Mutações exigem `Origin` i
 Ficha: name, className, species, level (1–20), experience, hitPoints, maxHitPoints, temporaryHitPoints, armorClass, attributes {STR,DEX,CON,INT,WIS,CHA} inteiros 1–30. PV atuais não excedem máximos. ownerId opcional, só mestre pode atribuir a outro membro. PATCH envia todos os campos editáveis e expectedVersion; resposta contém modifiers, proficiency, canEdit e version. Campos adicionais são rejeitados. Contratos exatos em packages/contracts/src/core.ts, characters.ts e game-sessions.ts.
 
 Limites atuais: participantes da campanha/sala até 100 na consulta; seletor inicial da sala usa primeira página de 20 fichas. Não há exclusão de ficha, saída da sala, delegação individual, mapa ou eventos Socket.IO nesta entrega. IDs da campanha sempre são verificados contra a associação do usuário. Dados de fichas alheias nunca são enviados a jogadores.
+
+## Contratos de catálogo e sugestões
+
+GET `/api/campaigns/:id/eligible-characters?q=texto` retorna até 20 pares id/name autorizados, busca por nome (máximo 120 caracteres); só o mestre recebe nomes de todas as fichas da campanha. Não é uma API pública. A página `/personagens?page=1` consulta somente fichas próprias.
+
+POST/PATCH de ficha aceitam também classId/speciesId/backgroundId/subclassId (opcionais, null para manual) e backgroundName/subclassName (até 80 caracteres). IDs são validados contra o catálogo; nomes precisam corresponder; subclasse exige classe correspondente e nível mínimo. Campos omitidos no PATCH são preservados. campaignId no corpo continua proibido; a campanha vem da rota autorizada. O retorno à sessão usa somente UUID de sessão cuja campanha e acesso foram verificados pelo servidor.

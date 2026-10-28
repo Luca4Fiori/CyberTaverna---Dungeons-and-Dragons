@@ -33,7 +33,7 @@ export default async function Page({
               className="button primary"
               href={`/campanhas/${id}/personagens/novo`}
             >
-              Criar personagem
+              Criar personagem nesta campanha
             </Link>
           )}
         <Link className="button" href={`/campanhas/${id}`}>

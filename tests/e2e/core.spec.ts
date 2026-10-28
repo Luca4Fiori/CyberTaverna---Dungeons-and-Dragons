@@ -316,8 +316,12 @@ test("fluxo RPG: convite, ficha do jogador, edição do mestre e sessão compart
       .getByRole("link", { name: "Personagens", exact: true })
       .click();
     await player
-      .getByRole("link", { name: "Criar personagem", exact: true })
+      .getByRole("link", {
+        name: "Criar personagem nesta campanha",
+        exact: true,
+      })
       .click();
+    await player.getByRole("button", { name: "Preenchimento manual" }).click();
     await player
       .getByLabel("Nome do personagem", { exact: true })
       .fill("Aurora");
@@ -376,4 +380,124 @@ test("fluxo RPG: convite, ficha do jogador, edição do mestre e sessão compart
   } finally {
     await playerContext.close();
   }
+});
+
+test("criador guiado contextual, catálogo, revisão, retorno à sessão e lista geral", async ({
+  page,
+  run,
+}) => {
+  const email = `e2e-${run}-guided@example.test`;
+  await register(page.request, email);
+  await login(page.request, email);
+  const campaignResponse = await page.request.post("/api/campaigns", {
+    headers: { Origin: origin },
+    data: { name: "Campanha guiada" },
+  });
+  expect(campaignResponse.status()).toBe(201);
+  const campaign = await campaignResponse.json();
+  const sessionResponse = await page.request.post(
+    `/api/campaigns/${campaign.id}/sessions`,
+    { headers: { Origin: origin }, data: { title: "Sessão guiada" } },
+  );
+  expect(sessionResponse.status()).toBe(201);
+  const session = await sessionResponse.json();
+  await page.goto(`/campanhas/${campaign.id}`);
+  await page
+    .getByRole("navigation", { name: "Navegação da campanha" })
+    .getByRole("link", { name: "Personagens", exact: true })
+    .click();
+  await expect(
+    page.getByRole("link", { name: "Criar personagem nesta campanha" }),
+  ).toBeVisible();
+  await page.goto(`/campanhas/${campaign.id}/sessoes/${session.id}`);
+  await page
+    .getByRole("link", { name: "Criar personagem nesta campanha" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: /Etapa 1 de 4/ }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Nome do personagem", { exact: true })
+    .fill("Estrela do gelo");
+  await page.getByLabel("Nível", { exact: true }).fill("3");
+  await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await page.getByLabel("Buscar classe no catálogo").fill("guerreiro");
+  await page
+    .getByLabel("Classe", { exact: true })
+    .selectOption("srd521-fighter");
+  await expect(page.getByText(/Treinamento marcial/)).toBeVisible();
+  await page.getByLabel("Buscar espécie no catálogo").fill("humano");
+  await page
+    .getByLabel("Espécie", { exact: true })
+    .selectOption("srd521-human");
+  await page
+    .getByLabel("Antecedente", { exact: true })
+    .selectOption("srd521-soldier");
+  await page
+    .getByLabel("Subclasse", { exact: true })
+    .selectOption("srd521-champion");
+  await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await page.getByLabel("Força", { exact: true }).fill("17");
+  await expect(page.getByLabel("Modificador de Força")).toHaveText("+3");
+  await page.getByLabel("PV máximos", { exact: true }).fill("20");
+  await page.getByLabel("PV atuais", { exact: true }).fill("20");
+  await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Revise sua ficha" }),
+  ).toBeVisible();
+  await expect(page.locator(".review-grid")).toContainText("Campeão");
+  await expect(page.locator(".review-grid")).toContainText("Campanha guiada");
+  await page.screenshot({
+    path: test.info().outputPath("criador-revisao.png"),
+    fullPage: true,
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  expect(
+    (
+      await (
+        await page.request.get(`/api/campaigns/${campaign.id}/characters`)
+      ).json()
+    ).length,
+  ).toBe(0);
+  await page.getByRole("button", { name: "Salvar personagem" }).click();
+  await expect(page).toHaveURL(new RegExp(`/sessoes/${session.id}$`));
+  await page
+    .getByLabel("Personagem para esta sessão")
+    .selectOption({ label: "Estrela do gelo" });
+  await page.getByRole("button", { name: "Registrar participação" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "Participação registrada",
+  );
+  await page.reload();
+  await expect(page.getByLabel("Personagem para esta sessão")).not.toHaveValue(
+    "",
+  );
+  const rows = await (
+    await page.request.get(`/api/campaigns/${campaign.id}/characters`)
+  ).json();
+  expect(rows[0]).toMatchObject({
+    campaignId: campaign.id,
+    classId: "srd521-fighter",
+    subclassName: "Campeão",
+    backgroundName: "Soldado",
+    modifiers: { STR: 3 },
+  });
+  await page.goto("/personagens");
+  await page.getByRole("link", { name: /Estrela do gelo/ }).click();
+  await expect(page.getByLabel("Classe", { exact: true })).toHaveValue(
+    "Guerreiro",
+  );
+  await page.getByLabel("Espécie", { exact: true }).fill("Povo do inverno");
+  await page.getByRole("button", { name: "Salvar personagem" }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Ficha salva com sucesso." }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel("Espécie", { exact: true })).toHaveValue(
+    "Povo do inverno",
+  );
 });

@@ -18,3 +18,7 @@ Arquivamento mantém consulta e bloqueia escrita de fichas, convites e sessões;
 Tokens de autenticação, recuperação e convites persistem apenas em hash. Mutação exige origem exata APP_URL e JSON, possui limite de corpo e rate limit. Recuperação é única e expira; redefine senha e revoga sessões. Cadastro público nunca promove administrador.
 
 Testes cobrem expiração, suspensão, logout, recuperação concorrente, convites concorrentes, papéis cruzados, IDOR de fichas/salas, proprietário, configurações, versão concorrente e arquivamento. Realtime permanece fechado com AUTH_NOT_IMPLEMENTED. Políticas puras de movimento já têm testes, mas nenhum movimento de token está disponível.
+
+## Navegação e catálogo (28/10/2026)
+
+A listagem geral agrega apenas fichas cujo ownerId pertence à sessão autenticada. A aba da campanha continua mostrando todas as fichas ao mestre e somente as próprias ao jogador. Busca de fichas elegíveis usa os mesmos escopos, validada em cada consulta. A criação associa pela rota; não aceita campaignId no payload. Identificadores do catálogo não concedem autorização nem mudam proprietário. Edição de conteúdo personalizado segue as permissões existentes; nenhuma promoção de papel foi adicionada.

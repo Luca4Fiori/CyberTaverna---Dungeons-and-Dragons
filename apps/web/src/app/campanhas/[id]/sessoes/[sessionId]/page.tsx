@@ -10,7 +10,13 @@ export default async function Page({
   const { token } = await viewer();
   const { id, sessionId } = await params;
   const session = await gameSessions().get(token, id, sessionId);
-  const sheets = await characters().list(token, id);
+  const sheets = await characters().eligible(token, id);
+  const selected = session.participants.find(
+    (participant) => participant.userId === session.userId,
+  )?.character;
+  if (selected && !sheets.some((sheet) => sheet.id === selected.id))
+    sheets.unshift(selected);
+  const policy = await characters().policy(token, id);
   const status = {
     PLANNED: "Planejada",
     ACTIVE: "Em andamento",
@@ -31,6 +37,10 @@ export default async function Page({
           session.archived || ["FINISHED", "CANCELLED"].includes(session.status)
         }
         characters={sheets}
+        selectedId={selected?.id}
+        canCreate={
+          !policy.archived && (policy.isGM || policy.playersCanCreateCharacters)
+        }
       />
       <section className="core-section">
         <h2>Participantes registrados</h2>

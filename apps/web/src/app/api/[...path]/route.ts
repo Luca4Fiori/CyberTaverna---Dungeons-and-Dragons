@@ -90,6 +90,17 @@ async function handle(request: NextRequest, context: Context) {
       const id = path[1];
       if (
         path.length === 3 &&
+        path[2] === "eligible-characters" &&
+        method === "GET"
+      ) {
+        const query = z
+          .string()
+          .max(120)
+          .parse(request.nextUrl.searchParams.get("q") ?? "");
+        return json(await characters().eligible(token, id, query));
+      }
+      if (
+        path.length === 3 &&
         path[2] === "character-settings" &&
         method === "PATCH"
       )

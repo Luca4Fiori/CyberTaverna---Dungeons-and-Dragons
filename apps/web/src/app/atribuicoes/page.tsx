@@ -18,9 +18,11 @@ export default function Page() {
         <a href="https://creativecommons.org/licenses/by/4.0/">
           Creative Commons Attribution 4.0
         </a>
-        . Nenhum corpus de regras ou tradução foi importado nesta etapa. A
-        interface em português foi escrita para este projeto. Classe e espécie
-        são preenchidas manualmente, sem catálogo importado.
+        . O criador inclui 12 classes, 9 espécies, 4 antecedentes e as 12
+        subclasses desse documento. Os nomes em português e as descrições breves
+        são adaptações próprias, não uma tradução oficial. Cada opção registra a
+        fonte, licença e página. Nenhum catálogo de outros livros foi incluído.
+        As escolhas ainda não aplicam habilidades ou magias automaticamente.
       </p>
       <p lang="en">
         This work includes material from the System Reference Document 5.2.1

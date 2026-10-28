@@ -35,3 +35,7 @@ Arquivos local/S3 ainda não implementados: exigirão validação binária, limi
 Formulários acessíveis, foco, navegação móvel, preferências visuais e redução de movimento; sem fontes remotas no build. Testes reais de PostgreSQL separados em ct_rpg_test e E2E em build de produção. Lançador carrega dotenv sem flags herdadas incompatíveis com processos internos do Next no Windows.
 
 Deploy futuro separará web/realtime, TLS/proxy WebSocket, banco e objetos privados, logs sem tokens, monitoramento e backups/PITR. RPO/RTO e recuperação ainda precisam ser definidos e demonstrados.
+
+## Catálogo e fluxo contextual
+
+`packages/catalog` contém dados versionados e fonte/licença; `packages/domain/character-options` valida a escolha e sua disponibilidade. Componentes CatalogChoice e CharacterEditor guiam criação/revisão, mantendo o modo manual. A navegação da campanha é comum às páginas filhas e verifica acesso no servidor. Consultas gerais filtram proprietário; consulta elegível filtra campanha e autorização. Não há alteração das associações existentes. Consulte CATALOGO_SRD.md para escopo e limitações.

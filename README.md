@@ -13,7 +13,7 @@ Copy-Item .env.example .env
 npm run services:up
 npm run db:generate
 npm run db:deploy
-npm run dev
+npm run devn
 ```
 
 Abra http://localhost:3000, cadastre duas contas e entre em perfis de navegador separados. O mestre cria uma campanha e um convite; o jogador abre o convite depois do login, cria sua ficha em Personagens; o mestre acessa a mesma ficha. Em Sessões, o mestre cria uma sala e ambos registram sua participação. O jogador seleciona uma ficha própria. Atualizar a página recupera o estado persistido; não há indicador de presença online.
@@ -52,3 +52,9 @@ Sessões usam tokens aleatórios opacos e hash no banco, sem SESSION_SECRET. Coo
 ## Produção futura
 
 Domínio planejado: https://ct.dungeonsanddragons.com.br. Sem publicação, alteração de DNS ou hospedagem. Faltam revisão operacional, privacidade/termos, backups com restauração, observabilidade, primeiro administrador e infraestrutura TLS. Não há cadastro público de administrador. Não usar esta instalação como serviço público antes desses trabalhos.
+
+## Criação guiada e navegação contextual (28/10/2026)
+
+Dentro da campanha, abra a aba **Personagens → Criar personagem nesta campanha**. O criador oferece identidade, catálogo de origens, atributos/defesa e revisão. Há modo manual para escolhas próprias e edição do mestre. A área geral Personagens reúne as fichas do usuário com link para a campanha. A sala sugere fichas autorizadas, mantém a escolha registrada e permite criar outra com retorno à sessão.
+
+Após atualizar, execute `npm run db:generate`, `npm run db:deploy` e `npm run db:test:prepare`. A migração de catálogo é aditiva; não altera vínculos ou nomes antigos. Catálogo e limites estão em [CATALOGO_SRD.md](docs/CATALOGO_SRD.md). Selecionar classe/espécie/antecedente não aplica habilidades, magias ou bônus automaticamente. O multiplayer em tempo real permanece pendente.

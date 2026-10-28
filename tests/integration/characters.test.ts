@@ -193,3 +193,108 @@ it("arquivamento mantém leitura e bloqueia alterações", async () => {
   ).rejects.toMatchObject({ code: "ARCHIVED" });
   expect((await chars.get(tokens[0], campaign, character)).canEdit).toBe(false);
 });
+
+it("catálogo persiste escolhas sem alterar o vínculo e mestre mantém edição manual", async () => {
+  const input = {
+    ...data,
+    level: 3,
+    classId: "srd521-fighter",
+    speciesId: "srd521-human",
+    backgroundId: "srd521-soldier",
+    backgroundName: "Soldado",
+    subclassId: "srd521-champion",
+    subclassName: "Campeão",
+  };
+  const sheet = await chars.create(tokens[1], other, input);
+  expect(await chars.get(tokens[1], other, sheet.id)).toMatchObject({
+    campaignId: other,
+    ownerId: ids[1],
+    classId: "srd521-fighter",
+    subclassName: "Campeão",
+  });
+  await chars.update(tokens[1], other, sheet.id, {
+    ...input,
+    classId: null,
+    className: "Guardião das neves",
+    subclassId: null,
+    subclassName: "Sentinela",
+    expectedVersion: 0,
+  });
+  expect(await chars.get(tokens[1], other, sheet.id)).toMatchObject({
+    campaignId: other,
+    ownerId: ids[1],
+    classId: null,
+    className: "Guardião das neves",
+    backgroundName: "Soldado",
+    version: 1,
+  });
+  await expect(
+    chars.update(tokens[0], other, sheet.id, { ...input, expectedVersion: 1 }),
+  ).rejects.toMatchObject({ status: 404 });
+});
+it("lista geral apenas reúne fichas próprias e busca elegível respeita campanha e proprietário", async () => {
+  const mine = await chars.mine(tokens[1]);
+  expect(mine.some((row) => row.id === character)).toBe(true);
+  expect((await chars.mine(tokens[2])).length).toBe(0);
+  expect(
+    (await chars.eligible(tokens[1], campaign, "Guard")).some(
+      (row) => row.id === character,
+    ),
+  ).toBe(true);
+  expect(await chars.eligible(tokens[2], campaign, "Guard")).toHaveLength(0);
+  await expect(chars.eligible(tokens[0], other)).rejects.toMatchObject({
+    status: 404,
+  });
+});
+it("servidor rejeita referência desconhecida, subclasse incompatível e troca de campanha no corpo", async () => {
+  for (const values of [
+    { classId: "proprietary-unknown" },
+    {
+      classId: "srd521-fighter",
+      subclassId: "srd521-champion",
+      subclassName: "Campeão",
+    },
+    {
+      classId: "srd521-wizard",
+      className: "Mago",
+      level: 3,
+      subclassId: "srd521-champion",
+      subclassName: "Campeão",
+    },
+    { campaignId: campaign },
+  ])
+    await expect(
+      chars.create(tokens[1], other, { ...data, ...values }),
+    ).rejects.toThrow();
+});
+it("migração aditiva preserva registros e vínculos legados", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const sql = await readFile(
+    "packages/database/prisma/migrations/202610280001_character_catalog/migration.sql",
+    "utf8",
+  );
+  await db.$transaction(async (tx) => {
+    // Tabela temporária isolada, sem escrever em Character pública.
+    await tx.$executeRaw`CREATE TEMP TABLE "Character" ON COMMIT DROP AS SELECT id, "campaignId", "ownerId", name, "className", species, version FROM public."Character" WHERE id = ${character}::uuid`;
+    await tx.$executeRawUnsafe("SET LOCAL search_path TO pg_temp");
+    const before = await tx.$queryRaw<
+      Array<{ id: string; campaignId: string; ownerId: string; name: string }>
+    >`SELECT * FROM "Character"`;
+    await tx.$executeRawUnsafe(sql);
+    const after = await tx.$queryRaw<
+      Array<{
+        id: string;
+        campaignId: string;
+        ownerId: string;
+        name: string;
+        classId: null;
+        backgroundName: string;
+      }>
+    >`SELECT * FROM "Character"`;
+    expect(after[0]).toMatchObject({
+      ...before[0],
+      classId: null,
+      backgroundName: "",
+    });
+  });
+});

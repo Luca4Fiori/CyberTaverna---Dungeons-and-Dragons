@@ -42,3 +42,11 @@ Preservar autenticação/campanhas existentes e reutilizar associação por camp
 ## ADR 008 — Validação no Windows
 
 Carregar dotenv dentro de scripts/web.mjs, sem -r/--env-file herdados pelo Next em NODE_OPTIONS. E2E usa build de produção, PostgreSQL isolado e Mailpit local para recuperação. O servidor de desenvolvimento não é usado como evidência de comportamento do build final.
+
+## ADR 009 — Catálogo e criação contextual (28/10/2026)
+
+Preservar campanha e proprietário de todas as fichas. Criar sempre sob rota de campanha autorizada; área geral somente agrega fichas do proprietário. Seleção de sessão consulta nomes elegíveis com limite de 20 por busca, sem enviar fichas de terceiros ao jogador.
+
+Catálogo estático versionado separado de `packages/rules`, com IDs, fonte e licença. Persistir referências opcionais e rótulos para suportar migração aditiva e conteúdo manual. Não inferir IDs para valores legados. IDs conhecidos exigem nome correspondente; subclasses exigem classe e nível compatíveis. Modo manual remove o ID da opção alterada, preservando intervenção do mestre e histórico. Futuros módulos aplicarão efeitos explicitamente, sem prometer cálculos ainda não implementados.
+
+Não houve migração de associação de personagens: campaignId e ownerId já eram relacionais. A migração nova apenas adiciona campos de origem. Teste executa o SQL real sobre cópia temporária de registro antigo, sem escrever na tabela pública.

@@ -30,6 +30,7 @@ export default async function Page({
         key={`${sheet.id}:${sheet.version}`}
         initial={sheet}
         campaignId={id}
+        campaignName={campaign.name}
         ownId={policy.userId}
         isGM={policy.isGM}
         canCreate={false}

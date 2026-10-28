@@ -49,9 +49,11 @@ select:focus-visible {
   z-index: 10;
   background: #10151f;
   padding: 12px;
+  clip-path: inset(100%);
 }
 .skip-link:focus {
   top: 0;
+  clip-path: none;
 }
 .sidebar {
   width: 232px;
@@ -806,5 +808,94 @@ fieldset:disabled {
 @media (max-width: 700px) {
   .ability-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.campaign-context {
+  margin-bottom: 2rem;
+}
+.campaign-context p {
+  color: #a6dcef;
+  overflow-wrap: anywhere;
+}
+.campaign-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-bottom: 1px solid #d3ae6350;
+  padding-bottom: 0.75rem;
+}
+.campaign-tabs a {
+  padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
+  color: #d8dce5;
+}
+.campaign-tabs a[aria-current] {
+  background: #a6dcef15;
+  color: #e6d9a4;
+  box-shadow: inset 0 -2px #d3ae63;
+}
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.catalog-choice {
+  border: 1px solid #a6dcef30;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: #10151f55;
+}
+.catalog-choice label {
+  margin: 0.85rem 0;
+}
+.field-help {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #c6cedb;
+}
+.creation-progress {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 1rem 0 1.5rem;
+}
+.creation-progress li {
+  padding: 0.55rem 0.8rem;
+  color: #c2c9d6;
+  border: 1px solid #343c4b;
+  border-radius: 0.5rem;
+}
+.creation-progress li[aria-current] {
+  color: #e6d9a4;
+  border-color: #d3ae63;
+  background: #d3ae6310;
+}
+.wizard-section {
+  margin: 1.5rem 0;
+}
+.wizard-section[hidden] {
+  display: none;
+}
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+.review-grid dt {
+  color: #a6dcef;
+  font-size: 0.85rem;
+}
+.review-grid dd {
+  margin: 0.4rem 0 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .catalog-grid {
+    grid-template-columns: 1fr;
+  }
+  .creation-progress li {
+    flex: 1 1 40%;
   }
 }

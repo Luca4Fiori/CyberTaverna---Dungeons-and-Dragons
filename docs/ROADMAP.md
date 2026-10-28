@@ -113,3 +113,34 @@ A etapa 1 completa continua aberta: faltam arquivos, mapas/tokens, dados oficiai
 - Sem push, publicação, alteração de DNS ou infraestrutura externa.
 
 Próximo passo recomendado: evoluir a ficha modular com inventário, recursos e magias licenciadas, ampliar testes de regras e acesso; depois integrar autenticação/salas Socket.IO reutilizando os serviços validados. Mesa virtual completa permanece fora desta tarefa.
+
+## Incremento de experiência — 28/10/2026
+
+Prioridade atual após avaliação manual: fluxo campanha/personagem e criador guiado. Inspecionado commit a8ffefe e preservadas alterações locais preexistentes. A solicitação anterior de multiplayer ainda não está implementada: Socket.IO continua fechado, sem presença ou sincronização.
+
+- [x] Navegação contextual por campanha com abas Visão da campanha, Personagens e Sessões.
+- [x] Criar personagem nesta campanha, associação automática pela rota e acesso direto às fichas autorizadas.
+- [x] Seção geral lista fichas próprias, com campanha e paginação; não expõe fichas alheias de campanhas mestradas.
+- [x] Sessão sugere fichas elegíveis, permite busca no servidor e preserva personagem já registrado. Criar a partir da sessão retorna à mesma sala, sem inscrição automática.
+- [x] Criador em quatro etapas com revisão e alternativa de preenchimento manual.
+- [x] Catálogo separado do motor: 12 classes, 9 espécies, 4 antecedentes e 12 subclasses SRD 5.2.1, com fontes/licença e descrições pt-BR próprias.
+- [x] Subclasse de catálogo validada por classe/nível no servidor; opções personalizadas sem ID de origem.
+- [x] Migração aditiva, sem reclassificar nomes antigos ou alterar associações.
+- [x] Página Estado do projeto retirada do destaque principal e identificada como desenvolvimento no rodapé.
+- [ ] Bônus de origens, talentos, habilidades, magias, inventário, multiclasses e evolução automática.
+
+Validação concluída; resultados e limitações registrados abaixo.
+
+### Resultado da validação do incremento — 28/10/2026
+
+- Prisma generate/validate e migração character_catalog aprovados em ct_rpg e ct_rpg_test; consulta SQL confirma as quatro migrações aplicadas. Migração aditiva não reescreve associações existentes.
+- **53/53 testes unitários e de integração aprovados**, incluindo catálogo/licença, busca, validação de classe/subclasse/nível, acesso cruzado, listagem própria, persistência e execução do SQL da migração sobre cópia temporária de registro legado.
+- **14/14 testes E2E aprovados**, em desktop/mobile, preservando os fluxos anteriores e acrescentando seleção guiada, revisão sem gravação antecipada, associação automática, retorno à sessão, seleção persistida e edição manual.
+- Typecheck, ESLint, Prettier e build web/realtime aprovados. Prettier ignora pacotes de referências externos em .agents/.claude/.windsurf, sem modificar esses arquivos preexistentes.
+- Falhas encontradas e corrigidas: Mailpit local desligado (serviço iniciado); rótulos de seleção explícitos; teste antigo adaptado ao modo manual; botão de avanço separado do botão de envio para impedir salvamento antes da confirmação; teste distingue mensagem de salvamento dos outputs de modificadores.
+- Capturas da revisão desktop/mobile inspecionadas. Ajustado recorte do link de pular navegação enquanto não tem foco, mantendo acesso por teclado.
+- Sem push, publicação ou alteração de infraestrutura externa.
+
+Limitações: esta é a primeira versão do criador guiado, não um validador completo de personagem D&D. Não há aplicação automática de habilidades, bônus de antecedentes, magias, inventário, linhagens, multiclasses ou evolução. Opções personalizadas mantêm o comportamento manual anterior; não implementam ainda um editor de conteúdo homebrew. Cada busca de personagem elegível retorna até 20 resultados; refine pelo nome. Sessões ainda não sincronizam em tempo real.
+
+Próximo trabalho: retomar a integração Socket.IO de autenticação, presença, alterações de ficha e ressincronização solicitada anteriormente; ampliar regras e recursos da ficha em incrementos testáveis.

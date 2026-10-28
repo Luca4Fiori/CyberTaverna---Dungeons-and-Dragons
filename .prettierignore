@@ -6,3 +6,7 @@ packages/database/generated
 playwright-report
 test-results
 *.tsbuildinfo
+# Pacotes de referências instalados por ferramentas externas.
+.agents
+.claude
+.windsurf

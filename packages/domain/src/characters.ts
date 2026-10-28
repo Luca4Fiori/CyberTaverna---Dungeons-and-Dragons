@@ -1,4 +1,6 @@
 import type { Database, Transaction } from "./auth";
+import { sessionUser } from "./auth";
+import { validateCharacterOptions } from "./character-options";
 import { membership, lockCampaign, requireActive } from "./campaigns";
 import { DomainError, unavailable } from "./errors";
 import {
@@ -31,6 +33,12 @@ function sheet(character: StoredCharacter, canEdit: boolean): CharacterSheet {
     name: character.name,
     className: character.className,
     species: character.species,
+    classId: character.classId,
+    speciesId: character.speciesId,
+    backgroundId: character.backgroundId,
+    subclassId: character.subclassId,
+    backgroundName: character.backgroundName,
+    subclassName: character.subclassName,
     level: character.level,
     experience: character.experience,
     hitPoints: character.hitPoints,
@@ -80,6 +88,41 @@ async function owner(
 }
 export function createCharacterService(db: Database) {
   return {
+    async mine(token: string | undefined, page = 1) {
+      const user = await sessionUser(db, token);
+      return db.character.findMany({
+        where: {
+          ownerId: user.id,
+          campaign: { members: { some: { userId: user.id } } },
+        },
+        select: {
+          id: true,
+          name: true,
+          campaignId: true,
+          className: true,
+          species: true,
+          level: true,
+          campaign: { select: { name: true, archivedAt: true } },
+        },
+        orderBy: [{ updatedAt: "desc" }, { id: "asc" }],
+        take: 20,
+        skip: (page - 1) * 20,
+      });
+    },
+    async eligible(token: string | undefined, campaignId: string, query = "") {
+      const { user, member } = await membership(db, token, campaignId);
+      return db.character.findMany({
+        where: {
+          campaignId,
+          ...(member.role === "GM" ? {} : { ownerId: user.id }),
+          name: { contains: query.slice(0, 120), mode: "insensitive" },
+        },
+        select: { id: true, name: true },
+        orderBy: [{ name: "asc" }, { id: "asc" }],
+        take: 20,
+      });
+    },
+
     async policy(token: string | undefined, campaignId: string) {
       const { user, member } = await membership(db, token, campaignId);
       const policy = await settings(db, campaignId);
@@ -168,6 +211,7 @@ export function createCharacterService(db: Database) {
         ownerId: requested,
         ...data
       } = createCharacterSchema.parse(input);
+      validateCharacterOptions({ ...data, attributes });
       return db.$transaction(async (tx) => {
         await lockCampaign(tx, campaignId);
         const { user, member } = await membership(tx, token, campaignId);
@@ -244,6 +288,11 @@ export function createCharacterService(db: Database) {
           include: { attributes: true },
         });
         if (!before) throw unavailable();
+        validateCharacterOptions({
+          ...sheet(before, false),
+          ...data,
+          attributes,
+        });
         const policy = await settings(tx, campaignId);
         if (
           member.role !== "GM" &&

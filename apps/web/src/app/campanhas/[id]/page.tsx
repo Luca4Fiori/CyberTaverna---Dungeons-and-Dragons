@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { z } from "zod";
 import { viewer } from "@/server/viewer";
 import { campaigns, characters } from "@/server/core";
@@ -29,14 +28,6 @@ export default async function Page({
         {campaign.archivedAt ? "ARQUIVADA" : "ATIVA"}
       </p>
       <h1>{campaign.name}</h1>
-      <div className="inline-links">
-        <Link className="button primary" href={`/campanhas/${id}/personagens`}>
-          Personagens
-        </Link>
-        <Link className="button" href={`/campanhas/${id}/sessoes`}>
-          Sessões
-        </Link>
-      </div>
       <p className="lead preserve-lines">
         {campaign.description || "Sem descrição."}
       </p>

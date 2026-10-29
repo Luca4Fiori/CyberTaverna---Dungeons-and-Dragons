@@ -1,6 +1,6 @@
 import type { Database, Transaction } from "./auth";
 import { sessionUser } from "./auth";
-import { validateCharacterOptions } from "./character-options";
+import { normalizeClasses } from "./multiclass";
 import { membership, lockCampaign, requireActive } from "./campaigns";
 import { DomainError, unavailable } from "./errors";
 import {
@@ -15,8 +15,12 @@ import { abilityModifier, proficiencyBonus } from "../../rules/src/index";
 import type {
   Character,
   CharacterAttribute,
+  CharacterClass,
 } from "../../database/generated/client/client";
-type StoredCharacter = Character & { attributes: CharacterAttribute[] };
+type StoredCharacter = Character & {
+  attributes: CharacterAttribute[];
+  classes: CharacterClass[];
+};
 function sheet(character: StoredCharacter, canEdit: boolean): CharacterSheet {
   const attributes = { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 };
   for (const ability of abilityKeys)
@@ -26,7 +30,22 @@ function sheet(character: StoredCharacter, canEdit: boolean): CharacterSheet {
   const modifiers = { ...attributes };
   for (const ability of abilityKeys)
     modifiers[ability] = abilityModifier(attributes[ability]);
+  const level = character.classes.reduce((sum, row) => sum + row.level, 0);
   return {
+    classes: character.classes
+      .sort((a, b) => a.position - b.position)
+      .map((row) => ({
+        classId: row.classId,
+        className: row.className,
+        subclassId: row.subclassId,
+        subclassName: row.subclassName,
+        level: row.level,
+        sourceId: row.sourceId,
+        subclassSourceId: row.subclassSourceId,
+        acquisitionLevels: row.acquisitionLevels,
+        rulesVersion: row.rulesVersion as "2024" | "2014" | "custom",
+      })),
+    multiclassAdjustment: character.multiclassAdjustment,
     id: character.id,
     campaignId: character.campaignId,
     ownerId: character.ownerId,
@@ -39,7 +58,7 @@ function sheet(character: StoredCharacter, canEdit: boolean): CharacterSheet {
     subclassId: character.subclassId,
     backgroundName: character.backgroundName,
     subclassName: character.subclassName,
-    level: character.level,
+    level,
     experience: character.experience,
     hitPoints: character.hitPoints,
     maxHitPoints: character.maxHitPoints,
@@ -47,7 +66,7 @@ function sheet(character: StoredCharacter, canEdit: boolean): CharacterSheet {
     armorClass: character.armorClass,
     attributes,
     modifiers,
-    proficiency: proficiencyBonus(character.level),
+    proficiency: proficiencyBonus(level),
     version: character.version,
     canEdit,
   };
@@ -169,7 +188,7 @@ export function createCharacterService(db: Database) {
           campaignId,
           ...(member.role === "GM" ? {} : { ownerId: user.id }),
         },
-        include: { attributes: true },
+        include: { attributes: true, classes: true },
         orderBy: [{ createdAt: "asc" }, { id: "asc" }],
         take: 20,
         skip: (page - 1) * 20,
@@ -191,7 +210,7 @@ export function createCharacterService(db: Database) {
           campaignId,
           ...(member.role === "GM" ? {} : { ownerId: user.id }),
         },
-        include: { attributes: true },
+        include: { attributes: true, classes: true },
       });
       if (!character) throw unavailable();
       const policy = await settings(db, campaignId);
@@ -211,7 +230,6 @@ export function createCharacterService(db: Database) {
         ownerId: requested,
         ...data
       } = createCharacterSchema.parse(input);
-      validateCharacterOptions({ ...data, attributes });
       return db.$transaction(async (tx) => {
         await lockCampaign(tx, campaignId);
         const { user, member } = await membership(tx, token, campaignId);
@@ -230,9 +248,19 @@ export function createCharacterService(db: Database) {
           member.role,
           requested,
         );
+        const { classes, ...normalized } = normalizeClasses(
+          { ...data, attributes },
+          member.role === "GM",
+        );
+        const fields = { ...data };
+        delete fields.classes;
         const character = await tx.character.create({
           data: {
-            ...data,
+            ...fields,
+            ...normalized,
+            classes: {
+              create: classes.map((row, position) => ({ ...row, position })),
+            },
             campaignId,
             ownerId,
             attributes: {
@@ -242,14 +270,14 @@ export function createCharacterService(db: Database) {
               })),
             },
           },
-          include: { attributes: true },
+          include: { attributes: true, classes: true },
         });
         await tx.characterHistory.create({
           data: {
             characterId: character.id,
             actorId: user.id,
             version: 0,
-            changes: { after: { ...data, ownerId, attributes } },
+            changes: { after: sheet(character, false) },
           },
         });
         await tx.auditLog.create({
@@ -285,14 +313,9 @@ export function createCharacterService(db: Database) {
         requireActive(member.campaign.archivedAt);
         const before = await tx.character.findFirst({
           where: { campaignId, id },
-          include: { attributes: true },
+          include: { attributes: true, classes: true },
         });
         if (!before) throw unavailable();
-        validateCharacterOptions({
-          ...sheet(before, false),
-          ...data,
-          attributes,
-        });
         const policy = await settings(tx, campaignId);
         if (
           member.role !== "GM" &&
@@ -316,10 +339,27 @@ export function createCharacterService(db: Database) {
           member.role,
           requested ?? before.ownerId,
         );
+        const { classes, ...normalized } = normalizeClasses(
+          {
+            ...sheet(before, false),
+            ...data,
+            classes: data.classes,
+            attributes,
+          },
+          member.role === "GM",
+          sheet(before, false),
+        );
+        const fields = { ...data };
+        delete fields.classes;
         const changed = await tx.character.update({
           where: { id },
           data: {
-            ...data,
+            ...fields,
+            ...normalized,
+            classes: {
+              deleteMany: {},
+              create: classes.map((row, position) => ({ ...row, position })),
+            },
             ownerId,
             version: { increment: 1 },
             attributes: {
@@ -330,7 +370,7 @@ export function createCharacterService(db: Database) {
               })),
             },
           },
-          include: { attributes: true },
+          include: { attributes: true, classes: true },
         });
         if (ownerId !== before.ownerId)
           await tx.gameSessionParticipant.updateMany({
@@ -344,7 +384,7 @@ export function createCharacterService(db: Database) {
             version: changed.version,
             changes: {
               before: sheet(before, false),
-              after: { ...data, ownerId, attributes },
+              after: sheet(changed, false),
             },
           },
         });

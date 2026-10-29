@@ -11,12 +11,9 @@ import {
   type CharacterSheet,
   type CharacterInput,
 } from "../../../../packages/contracts/src/characters";
-import {
-  classes,
-  species,
-  backgrounds,
-  subclasses,
-} from "../../../../packages/catalog/src/index";
+import { library } from "../../../../packages/catalog/src/library";
+const { classes, species, backgrounds, subclasses } = library;
+import { ClassDistribution, emptyClass } from "./class-distribution";
 import { abilityModifier } from "../../../../packages/rules/src/index";
 import { CatalogChoice } from "./catalog-choice";
 import { apiRequest } from "./core-form";
@@ -122,6 +119,8 @@ export function CharacterEditor({
     setFailed(false);
     // Envie apenas campos do contrato, sem metadados da resposta (id, modifiers, canEdit).
     const input = {
+      classes: data.classes,
+      multiclassAdjustment: data.multiclassAdjustment,
       name: data.name,
       className: data.className,
       species: data.species,
@@ -190,6 +189,7 @@ export function CharacterEditor({
         {label}
         <input
           name={key}
+          readOnly={key === "level" && Boolean(data.classes)}
           type="number"
           required
           min={min}
@@ -304,9 +304,65 @@ export function CharacterEditor({
           </section>
           <section hidden={!visible(1)} className="wizard-section">
             <h3>Origens e especialização</h3>
+            {data.classes ? (
+              <ClassDistribution
+                rows={data.classes}
+                onChange={(rows) =>
+                  change({
+                    classes: rows,
+                    level: rows.reduce((sum, row) => sum + row.level, 0),
+                    className: rows[0]!.className,
+                    classId: rows[0]!.classId,
+                    subclassName: rows[0]!.subclassName,
+                    subclassId: rows[0]!.subclassId,
+                  })
+                }
+              />
+            ) : (
+              <button
+                type="button"
+                className="button"
+                onClick={() =>
+                  change({
+                    classes: [
+                      {
+                        ...emptyClass(),
+                        classId: data.classId ?? null,
+                        className: data.className,
+                        subclassId: data.subclassId ?? null,
+                        subclassName: data.subclassName ?? "",
+                        level: data.level,
+                        rulesVersion: data.classId ? "2024" : "custom",
+                      },
+                    ],
+                  })
+                }
+              >
+                Distribuir níveis por classe
+              </button>
+            )}
+            {isGM && (
+              <label>
+                Ajuste de multiclasse autorizado pelo mestre
+                <input
+                  value={data.multiclassAdjustment ?? ""}
+                  maxLength={1000}
+                  onChange={(e) =>
+                    change({ multiclassAdjustment: e.target.value })
+                  }
+                />
+                <small>
+                  Justifique exceções aos requisitos. O ajuste e seu autor ficam
+                  no histórico.
+                </small>
+              </label>
+            )}
+            {!isGM && data.multiclassAdjustment && (
+              <p>Ajuste do mestre: {data.multiclassAdjustment}</p>
+            )}
             {manual ? (
               <div className="sheet-grid">
-                <label>
+                <label hidden={Boolean(data.classes)}>
                   Classe
                   <input
                     name="className"
@@ -347,7 +403,7 @@ export function CharacterEditor({
                     }
                   />
                 </label>
-                <label>
+                <label hidden={Boolean(data.classes)}>
                   Subclasse
                   <input
                     maxLength={80}
@@ -363,20 +419,22 @@ export function CharacterEditor({
               </div>
             ) : (
               <div className="catalog-grid">
-                <CatalogChoice
-                  label="Classe"
-                  options={classes}
-                  id={data.classId}
-                  name={data.className}
-                  onChange={(classId, className) =>
-                    change({
-                      classId,
-                      className,
-                      subclassId: null,
-                      subclassName: "",
-                    })
-                  }
-                />
+                {!data.classes && (
+                  <CatalogChoice
+                    label="Classe"
+                    options={classes}
+                    id={data.classId}
+                    name={data.className}
+                    onChange={(classId, className) =>
+                      change({
+                        classId,
+                        className,
+                        subclassId: null,
+                        subclassName: "",
+                      })
+                    }
+                  />
+                )}
                 <CatalogChoice
                   label="Espécie"
                   options={species}
@@ -396,25 +454,26 @@ export function CharacterEditor({
                   }
                   optional
                 />
-                {data.level >= 3 ? (
-                  <CatalogChoice
-                    label="Subclasse"
-                    options={subclasses.filter(
-                      (item) => item.classId === data.classId,
-                    )}
-                    id={data.subclassId}
-                    name={data.subclassName ?? ""}
-                    onChange={(subclassId, subclassName) =>
-                      change({ subclassId, subclassName })
-                    }
-                    optional
-                  />
-                ) : (
-                  <p className="field-help">
-                    As subclasses do catálogo ficam disponíveis no nível 3. Você
-                    poderá escolhê-las ao evoluir.
-                  </p>
-                )}
+                {!data.classes &&
+                  (data.level >= 3 ? (
+                    <CatalogChoice
+                      label="Subclasse"
+                      options={subclasses.filter(
+                        (item) => item.classId === data.classId,
+                      )}
+                      id={data.subclassId}
+                      name={data.subclassName ?? ""}
+                      onChange={(subclassId, subclassName) =>
+                        change({ subclassId, subclassName })
+                      }
+                      optional
+                    />
+                  ) : (
+                    <p className="field-help">
+                      As subclasses do catálogo ficam disponíveis no nível 3.
+                      Você poderá escolhê-las ao evoluir.
+                    </p>
+                  ))}
               </div>
             )}
             <p className="field-help">
@@ -483,10 +542,32 @@ export function CharacterEditor({
                 {[
                   ["Campanha", campaignName ?? campaignId],
                   ["Personagem", data.name],
-                  ["Classe", data.className],
+                  [
+                    "Classe",
+                    data.classes
+                      ? data.classes
+                          .map(
+                            (row) =>
+                              `${row.className} ${row.level} (classe ${row.rulesVersion}) — ${row.subclassName || "Sem subclasse"}${row.subclassId ? ` · ${subclasses.find((item) => item.id === row.subclassId)?.source.name ?? "Fonte manual"}` : ""}`,
+                          )
+                          .join(" / ")
+                      : data.className,
+                  ],
                   ["Espécie", data.species],
                   ["Antecedente", data.backgroundName || "Não escolhido"],
-                  ["Subclasse", data.subclassName || "Não escolhida"],
+                  ...(data.classes
+                    ? []
+                    : [["Subclasse", data.subclassName || "Não escolhida"]]),
+                  [
+                    "Fonte da espécie",
+                    species.find((item) => item.id === data.speciesId)?.source
+                      .name ?? "Personalizada",
+                  ],
+                  [
+                    "Fonte do antecedente",
+                    backgrounds.find((item) => item.id === data.backgroundId)
+                      ?.source.name ?? "Personalizado / não escolhido",
+                  ],
                   ["Nível / XP", `${data.level} / ${data.experience}`],
                   [
                     "PV / máximos / temporários",
@@ -514,6 +595,10 @@ export function CharacterEditor({
                   </div>
                 ))}
               </dl>
+              <p>
+                Referências externas não aplicam regras ou habilidades
+                automaticamente.
+              </p>
               <p>
                 Nada foi salvo ainda. Volte para ajustar suas escolhas ou
                 confirme abaixo.

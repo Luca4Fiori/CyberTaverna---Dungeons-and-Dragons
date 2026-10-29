@@ -20,8 +20,27 @@ export const attributesSchema = z
     CHA: score,
   })
   .strict();
+export const characterClassSchema = z
+  .object({
+    classId: z.string().min(1).max(80).nullable().default(null),
+    className: z.string().trim().min(1).max(80),
+    subclassId: z.string().min(1).max(80).nullable().default(null),
+    subclassName: z.string().trim().max(80).default(""),
+    level: z.number().int().min(1).max(20),
+    rulesVersion: z.enum(["2024", "2014", "custom"]).default("2024"),
+    sourceId: z.string().min(1).max(80).default("custom"),
+    subclassSourceId: z.string().min(1).max(80).nullable().default(null),
+    acquisitionLevels: z
+      .array(z.number().int().min(1).max(20))
+      .max(20)
+      .default([]),
+  })
+  .strict();
+export type CharacterClassInput = z.infer<typeof characterClassSchema>;
 export const characterFieldsSchema = z
   .object({
+    classes: z.array(characterClassSchema).min(1).max(20).optional(),
+    multiclassAdjustment: z.string().trim().max(1000).optional(),
     name: z.string().trim().min(2).max(120),
     className: z.string().trim().min(1).max(80),
     species: z.string().trim().min(1).max(80),

@@ -22,3 +22,7 @@ Testes cobrem expiração, suspensão, logout, recuperação concorrente, convit
 ## Navegação e catálogo (28/10/2026)
 
 A listagem geral agrega apenas fichas cujo ownerId pertence à sessão autenticada. A aba da campanha continua mostrando todas as fichas ao mestre e somente as próprias ao jogador. Busca de fichas elegíveis usa os mesmos escopos, validada em cada consulta. A criação associa pela rota; não aceita campaignId no payload. Identificadores do catálogo não concedem autorização nem mudam proprietário. Edição de conteúdo personalizado segue as permissões existentes; nenhuma promoção de papel foi adicionada.
+
+## Exceções de multiclasse
+
+Somente GM da campanha pode criar/alterar multiclassAdjustment. A justificativa para dispensar requisitos exige pelo menos 10 caracteres e é registrada no histórico com o autor. Jogador mantém aprovação apenas quando a distribuição e os atributos que a fundamentam não mudam; não consegue aprovar nova exceção. Limites de níveis e vínculo classe/subclasse são invariantes. Nenhuma mudança nas permissões de proprietário, isolamento, versão esperada ou bloqueio por arquivamento.

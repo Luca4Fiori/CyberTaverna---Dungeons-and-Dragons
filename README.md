@@ -58,3 +58,9 @@ Domínio planejado: https://ct.dungeonsanddragons.com.br. Sem publicação, alte
 Dentro da campanha, abra a aba **Personagens → Criar personagem nesta campanha**. O criador oferece identidade, catálogo de origens, atributos/defesa e revisão. Há modo manual para escolhas próprias e edição do mestre. A área geral Personagens reúne as fichas do usuário com link para a campanha. A sala sugere fichas autorizadas, mantém a escolha registrada e permite criar outra com retorno à sessão.
 
 Após atualizar, execute `npm run db:generate`, `npm run db:deploy` e `npm run db:test:prepare`. A migração de catálogo é aditiva; não altera vínculos ou nomes antigos. Catálogo e limites estão em [CATALOGO_SRD.md](docs/CATALOGO_SRD.md). Selecionar classe/espécie/antecedente não aplica habilidades, magias ou bônus automaticamente. O multiplayer em tempo real permanece pendente.
+
+## Catálogo e multiclasse (29/10/2026)
+
+Fichas suportam distribuição relacional de classes e subclasses, total calculado, requisitos e ajustes autorizados pelo mestre. No criador, use **Distribuir níveis por classe** e **Adicionar outra classe**. Filtros pesquisam opções por nome em português/inglês, fonte e edição. Referências comerciais não aplicam habilidades automaticamente.
+
+Após atualizar: `npm run db:generate` e `npm run db:deploy`. A quinta migração preserva as fichas existentes. Consulte [modelo, compatibilidade e fontes](docs/MULTICLASSE.md). Não há novas variáveis de ambiente.

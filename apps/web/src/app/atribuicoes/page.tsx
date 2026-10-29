@@ -21,7 +21,8 @@ export default function Page() {
         . O criador inclui 12 classes, 9 espécies, 4 antecedentes e as 12
         subclasses desse documento. Os nomes em português e as descrições breves
         são adaptações próprias, não uma tradução oficial. Cada opção registra a
-        fonte, licença e página. Nenhum catálogo de outros livros foi incluído.
+        fonte, licença e página. Opções de outros livros aparecem somente como
+        referências de nome e origem, sem reprodução das regras proprietárias.
         As escolhas ainda não aplicam habilidades ou magias automaticamente.
       </p>
       <p lang="en">
@@ -38,6 +39,14 @@ export default function Page() {
         .
       </p>
       <h2>Conteúdo dos usuários</h2>
+      <p>
+        Referências externas: Warrior of Mercy — Player’s Handbook (2024); Way
+        of Mercy e Swarmkeeper — Tasha’s Cauldron of Everything (2020);
+        Shadar-kai — Mordenkainen Presents: Monsters of the Multiverse (2022);
+        Mercenary Veteran — Sword Coast Adventurer’s Guide (2015). Consulte a
+        fonte correspondente: a seleção não concede habilidades automaticamente.
+        Os nomes traduzidos são adaptações próprias.
+      </p>
       <p>
         O futuro envio de arquivos e conteúdo deverá respeitar os direitos de
         seus autores. Termos de uso, privacidade, retenção e procedimentos de

@@ -143,6 +143,8 @@ model Character {
   version Int @default(0)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  classes CharacterClass[]
+  multiclassAdjustment String @default("") @db.VarChar(1000)
   attributes CharacterAttribute[]
   history CharacterHistory[]
   attendance GameSessionParticipant[]
@@ -261,4 +263,21 @@ model AuditLog {
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   @@index([campaignId, createdAt])
   @@index([actorId, createdAt])
+}
+
+// Authoritative class distribution; Character scalar class fields remain compatibility projections.
+model CharacterClass {
+  characterId String @db.Uuid
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  position Int
+  classId String? @db.VarChar(80)
+  className String @db.VarChar(80)
+  subclassId String? @db.VarChar(80)
+  subclassName String @default("") @db.VarChar(80)
+  level Int
+  rulesVersion String @db.VarChar(20)
+  sourceId String @db.VarChar(80)
+  subclassSourceId String? @db.VarChar(80)
+  acquisitionLevels Int[] @default([])
+  @@id([characterId, position])
 }

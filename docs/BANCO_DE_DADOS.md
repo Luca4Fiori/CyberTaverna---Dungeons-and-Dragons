@@ -38,3 +38,7 @@ Edições de ficha exigem expectedVersion, incrementam versão e registram antes
 ## Migração character_catalog — 28/10/2026
 
 Character recebe classId, speciesId, backgroundId e subclassId opcionais (IDs do catálogo versionado), backgroundName e subclassName com padrão vazio. São referências validadas pelo domínio a dados de código, não FKs para tabelas inexistentes. Rótulos e relações antigos são mantidos integralmente. Migração aditiva testada em tabela temporária de PostgreSQL; sem reset ou alteração de migrações anteriores.
+
+## Migração 202610290001_multiclass
+
+`CharacterClass` tem chave composta characterId/position, FK Character com CASCADE, classe/subclasse, nível, versão de regras, fontes separadas e array opcional de níveis de aquisição. CHECKs limitam posição e nível. `Character.multiclassAdjustment` guarda a justificativa atual; aprovação e alterações são preservadas no histórico versionado com actorId. Migração copia cada ficha para um vínculo, preservando colunas antigas, dono, campanha e referências de sessão. Soma, identidade de catálogo e requisitos são validados no serviço, sob bloqueio transacional da campanha. [Contrato e limitações](MULTICLASSE.md).

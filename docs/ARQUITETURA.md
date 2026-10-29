@@ -39,3 +39,7 @@ Deploy futuro separará web/realtime, TLS/proxy WebSocket, banco e objetos priva
 ## Catálogo e fluxo contextual
 
 `packages/catalog` contém dados versionados e fonte/licença; `packages/domain/character-options` valida a escolha e sua disponibilidade. Componentes CatalogChoice e CharacterEditor guiam criação/revisão, mantendo o modo manual. A navegação da campanha é comum às páginas filhas e verifica acesso no servidor. Consultas gerais filtram proprietário; consulta elegível filtra campanha e autorização. Não há alteração das associações existentes. Consulte CATALOGO_SRD.md para escopo e limitações.
+
+## Incremento: catálogo versionado e multiclasse
+
+O catálogo estático extensível em `packages/catalog/src/library.ts` separa registros e fontes, incluindo estado de licenciamento e referência externa. As categorias habilidade/talento/magia estão preparadas, sem regras fictícias. `packages/rules/src/multiclass.ts` calcula níveis e requisitos; `packages/domain/src/multiclass.ts` valida opções e exceções dentro dos serviços transacionais autorizados. `CharacterClass` é a distribuição persistida; campos escalares são projeções de compatibilidade. Detalhes em [MULTICLASSE.md](MULTICLASSE.md).

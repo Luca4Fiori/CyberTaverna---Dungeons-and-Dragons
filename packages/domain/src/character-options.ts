@@ -1,9 +1,5 @@
-import {
-  classes,
-  species,
-  backgrounds,
-  subclasses,
-} from "../../catalog/src/index";
+import { library } from "../../catalog/src/library";
+const { classes, species, backgrounds, subclasses } = library;
 import type { CharacterInput } from "../../contracts/src/characters";
 import { DomainError } from "./errors";
 /** IDs de catálogo são explícitos. Nunca inferir equivalência de uma ficha antiga pelo nome. */

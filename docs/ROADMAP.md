@@ -144,3 +144,33 @@ Validação concluída; resultados e limitações registrados abaixo.
 Limitações: esta é a primeira versão do criador guiado, não um validador completo de personagem D&D. Não há aplicação automática de habilidades, bônus de antecedentes, magias, inventário, linhagens, multiclasses ou evolução. Opções personalizadas mantêm o comportamento manual anterior; não implementam ainda um editor de conteúdo homebrew. Cada busca de personagem elegível retorna até 20 resultados; refine pelo nome. Sessões ainda não sincronizam em tempo real.
 
 Próximo trabalho: retomar a integração Socket.IO de autenticação, presença, alterações de ficha e ressincronização solicitada anteriormente; ampliar regras e recursos da ficha em incrementos testáveis.
+
+## Catálogo extensível e multiclasse — 29/10/2026
+
+Prioridade atual solicitada: estrutura de catálogo e fichas multiclasse. Inspecionados os commits recentes (incluindo d7a3f17), contratos, serviços, migrações e documentação antes da implementação. Os resultados anteriores acima são históricos; esta seção atualiza a pendência de multiclasse, sem declarar concluída a etapa 2 ou o motor completo.
+
+- [x] Fontes com nome, edição, versão, URL, licença e condição de conteúdo; categorias de classe, subclasse, espécie, antecedente, habilidade, talento e magia preparadas.
+- [x] Preservado catálogo SRD; acrescentadas referências externas Warrior of Mercy 2024, Way of Mercy 2020, Swarmkeeper 2020, Shadar-kai 2022 e Mercenary Veteran 2015, sem textos proprietários.
+- [x] Classes relacionais por personagem, com níveis, subclasse própria, versões, fontes separadas e ordem de aquisição opcional validada.
+- [x] Total calculado e proficiência por total; pré-requisitos das classes SRD, distribuição válida, unicidade e disponibilidade de subclasse por nível de classe.
+- [x] Ajustes de requisitos autorizados somente pelo mestre da campanha, com justificativa e histórico; jogadores não concedem exceções ou editam fichas alheias.
+- [x] Migração aditiva aplicada em ct_rpg e ct_rpg_test. Verificação antes/depois confirmou a preservação da ficha real existente, seus vínculos, campos legados e versão. Nenhum personagem de exemplo foi inserido no banco de uso real.
+- [x] Criador com múltiplas classes, distribuição de níveis, pesquisa pt/en, filtros por fonte/edição, avisos de referências, modo personalizado e resumo com origem das opções.
+- [x] Cliente antigo impedido de apagar uma distribuição multiclasse ao omitir classes; concorrência continua protegida por expectedVersion.
+- [x] Testes de classe única, multiclasse, soma, requisitos, versões, subclasses, persistência, autorização, isolamento e migração SQL.
+- [x] Criação e recuperação de **Enxame da Misericórdia**: Monge 13 / Warrior of Mercy (PHB 2024), Patrulheiro 7 / Swarmkeeper (Tasha 2020), Shadar-kai (MotM 2022), Mercenary Veteran (SCAG 2015), nível total 20 e proficiência +6.
+
+### Validação
+
+- Docker/PostgreSQL local e Mailpit: serviços saudáveis; migrações aplicadas e Prisma generate/validate aprovados.
+- Vitest: **66/66 testes unitários e de integração aprovados**, com PostgreSQL real separado para testes. Inclui regressão da comparação de exceções independente da ordem das chaves JSON.
+- Playwright: **16/16 testes aprovados** em desktop e celular; fluxos anteriores preservados, novo fluxo multiclasse cria, salva, recarrega e confere as fontes. Capturas de revisão e ausência de rolagem horizontal verificadas.
+- Typecheck, ESLint, Prettier e build Next.js/realtime aprovados.
+- Problemas corrigidos durante a validação: rótulos acessíveis dos filtros, resumo que poderia confundir edição da classe com origem da subclasse e comparação de aprovação sensível à ordem das propriedades.
+- Sem push, publicação, API privada ou alteração de infraestrutura externa.
+
+### Pendências e próximo passo
+
+O catálogo extensível ainda não inclui registros de habilidades/talentos/magias. Conteúdo personalizado permanece manual na ficha; falta editor de biblioteca homebrew compartilhada. Requisitos não implementados de classes manuais exigem decisão registrada do mestre em multiclasse. Não há conversão automática de antecedentes antigos, concessão automática de recursos/habilidades, agregação de espaços de magia, proficiências, inventário ou progressão completa por nível. A ordem de aquisição não reconstrói atributos históricos.
+
+Próximo incremento recomendado: implementar recursos e progressão por classe com dados licenciados do SRD e testes de agregação multiclasse, mantendo referências externas manuais. A solicitação anterior de Socket.IO/presença continua pendente e não foi substituída por simulação. Ver [MULTICLASSE.md](MULTICLASSE.md) para contrato, fontes, compatibilidade e limites.

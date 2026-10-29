@@ -17,7 +17,7 @@ Os nomes em português e as descrições breves são adaptações feitas para o 
 - 4 antecedentes: Acólito, Criminoso, Sábio e Soldado (p. 83).
 - Uma subclasse por classe, somente as presentes no SRD: Caminho do Berserker, Colégio do Conhecimento, Domínio da Vida, Círculo da Terra, Campeão, Guerreiro da Mão Aberta, Juramento da Devoção, Caçador, Ladrão, Feitiçaria Dracônica, Patrono Ínfero e Evocador. A seleção de catálogo exige a classe correspondente e nível 3 ou superior. Páginas individuais ficam em cada registro.
 
-Não incluímos outras opções dos livros comerciais. Antecedente/subclasse podem ficar sem escolha nesta entrega progressiva. Classe e espécie são obrigatórias, com alternativa personalizada. Personalizações não recebem ID nem atribuição de origem SRD; a pessoa deve ter direito de usar seu conteúdo.
+A expansão de 29/10/2026 acrescenta referências de nomes e fontes de livros comerciais, sem suas regras, conforme [MULTICLASSE.md](MULTICLASSE.md). Antecedente/subclasse podem ficar sem escolha nesta entrega progressiva. Classe e espécie são obrigatórias, com alternativa personalizada. Personalizações não recebem ID nem atribuição de origem SRD; a pessoa deve ter direito de usar seu conteúdo.
 
 ## Separação de responsabilidades
 
@@ -27,7 +27,7 @@ Não incluímos outras opções dos livros comerciais. Antecedente/subclasse pod
 - Motor de regras: modificadores e proficiência em `packages/rules`; não depende da UI.
 - Interface: quatro etapas, revisão, modo manual e feedback de gravação.
 
-Ainda não automatizados: bônus de antecedentes, talentos, linhagens, habilidades, proficiências, magias, PV, CA, inventário, multiclasses e evolução. Os atributos são valores finais informados pelo usuário. A subclasse usa o nível da ficha enquanto não há multiclasses. Não interpretar uma seleção no catálogo como implementação dessas regras.
+Ainda não automatizados: bônus de antecedentes, talentos, linhagens, habilidades, proficiências, magias, PV, CA, inventário e evolução automática. Os atributos são valores finais informados pelo usuário. Desde 29/10/2026, a subclasse é validada pelo nível de sua classe, e a distribuição multiclasse é persistida separadamente. Não interpretar uma seleção no catálogo como implementação dessas regras.
 
 ## Compatibilidade e migração
 

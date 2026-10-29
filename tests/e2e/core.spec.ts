@@ -501,3 +501,93 @@ test("criador guiado contextual, catálogo, revisão, retorno à sessão e lista
     "Povo do inverno",
   );
 });
+
+test("multiclasse com referências externas persiste e reabre no computador e celular", async ({
+  page,
+  run,
+}) => {
+  const email = `e2e-${run}-multiclass@example.test`;
+  await register(page.request, email);
+  await login(page.request, email);
+  const response = await page.request.post("/api/campaigns", {
+    headers: { Origin: origin },
+    data: { name: "Mesa multiclasse" },
+  });
+  expect(response.status()).toBe(201);
+  const campaign = await response.json();
+  await page.goto(`/campanhas/${campaign.id}/personagens/novo`);
+  await page
+    .getByLabel("Nome do personagem", { exact: true })
+    .fill("Enxame da Misericórdia");
+  await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Distribuir níveis por classe" })
+    .click();
+  await page
+    .getByLabel("Buscar classe 1 no catálogo", { exact: true })
+    .fill("monk");
+  await page
+    .getByLabel("Classe 1", { exact: true })
+    .selectOption("srd521-monk");
+  await page.getByLabel("Níveis na classe 1", { exact: true }).fill("13");
+  await page
+    .getByLabel("Fonte de subclasse 1", { exact: true })
+    .selectOption("phb-2024");
+  await page
+    .getByLabel("Subclasse 1", { exact: true })
+    .selectOption("phb2024-mercy");
+  await page.getByRole("button", { name: "Adicionar outra classe" }).click();
+  await page
+    .getByLabel("Classe 2", { exact: true })
+    .selectOption("srd521-ranger");
+  await page.getByLabel("Níveis na classe 2", { exact: true }).fill("7");
+  await page
+    .getByLabel("Edição de subclasse 2", { exact: true })
+    .selectOption("2014");
+  await page
+    .getByLabel("Subclasse 2", { exact: true })
+    .selectOption("tce2020-swarmkeeper");
+  await page
+    .getByLabel("Espécie", { exact: true })
+    .selectOption("motm2022-shadar-kai");
+  await page
+    .getByLabel("Antecedente", { exact: true })
+    .selectOption("scag2015-mercenary-veteran");
+  await expect(page.getByText(/Total 20/)).toBeVisible();
+  await expect(page.getByText(/Referência externa/).first()).toBeVisible();
+  await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await page.getByLabel("Destreza", { exact: true }).fill("18");
+  await page.getByLabel("Sabedoria", { exact: true }).fill("18");
+  await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await expect(page.getByText(/Monge 13/)).toBeVisible();
+  await page.screenshot({
+    path: test.info().outputPath("multiclasse-revisao.png"),
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Salvar personagem" }).click();
+  await expect(page).toHaveURL(
+    new RegExp(`/campanhas/${campaign.id}/personagens/[0-9a-f-]{36}$`),
+  );
+  await page.reload();
+  await expect(
+    page.getByLabel("Níveis na classe 1", { exact: true }),
+  ).toHaveValue("13");
+  await expect(
+    page.getByLabel("Níveis na classe 2", { exact: true }),
+  ).toHaveValue("7");
+  const id = page.url().split("/").pop();
+  const saved = await (
+    await page.request.get(`/api/campaigns/${campaign.id}/characters/${id}`)
+  ).json();
+  expect(saved.level).toBe(20);
+  expect(
+    saved.classes.map(
+      (row: { subclassSourceId: string }) => row.subclassSourceId,
+    ),
+  ).toEqual(["phb-2024", "tce-2020"]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});

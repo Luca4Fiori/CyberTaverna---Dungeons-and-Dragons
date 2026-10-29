@@ -22,7 +22,13 @@ export function CatalogChoice({
   const key = useId();
   const [query, setQuery] = useState("");
   const [custom, setCustom] = useState(!id && Boolean(name));
-  const filtered = searchCatalog(options, query);
+  const [edition, setEdition] = useState("");
+  const [source, setSource] = useState("");
+  const filtered = searchCatalog(options, query).filter(
+    (item) =>
+      (!edition || item.source.edition === edition) &&
+      (!source || item.source.id === source),
+  );
   const selected = options.find((item) => item.id === id);
   const rows =
     selected && !filtered.includes(selected)
@@ -40,6 +46,38 @@ export function CatalogChoice({
           onChange={(event) => setQuery(event.target.value)}
         />
       </label>
+      <div className="sheet-grid">
+        <label>
+          Edição de {label.toLowerCase()}
+          <select
+            aria-label={`Edição de ${label.toLowerCase()}`}
+            value={edition}
+            onChange={(e) => setEdition(e.target.value)}
+          >
+            <option value="">Todas</option>
+            {[...new Set(options.map((x) => x.source.edition))].map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Fonte de {label.toLowerCase()}
+          <select
+            aria-label={`Fonte de ${label.toLowerCase()}`}
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+          >
+            <option value="">Todas</option>
+            {[
+              ...new Map(options.map((x) => [x.source.id, x.source])).values(),
+            ].map((value) => (
+              <option key={value.id} value={value.id}>
+                {value.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
       <label>
         {label}
         <select
@@ -81,7 +119,7 @@ export function CatalogChoice({
         {custom
           ? "Combine esta escolha com o mestre. Ela não aplica habilidades automaticamente."
           : selected
-            ? `${selected.description} SRD 5.2.1, p. ${selected.page}.`
+            ? `${selected.description} ${selected.source.name} · ${selected.source.edition} · versão ${selected.source.version}${selected.page ? `, p. ${selected.page}` : ""}. ${selected.compatibility === "legacy-manual" ? "Opção anterior: adaptação manual com o mestre." : ""}`
             : "Escolha uma opção para consultar a descrição."}
       </p>
     </section>

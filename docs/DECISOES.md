@@ -50,3 +50,7 @@ Preservar campanha e proprietário de todas as fichas. Criar sempre sob rota de 
 Catálogo estático versionado separado de `packages/rules`, com IDs, fonte e licença. Persistir referências opcionais e rótulos para suportar migração aditiva e conteúdo manual. Não inferir IDs para valores legados. IDs conhecidos exigem nome correspondente; subclasses exigem classe e nível compatíveis. Modo manual remove o ID da opção alterada, preservando intervenção do mestre e histórico. Futuros módulos aplicarão efeitos explicitamente, sem prometer cálculos ainda não implementados.
 
 Não houve migração de associação de personagens: campaignId e ownerId já eram relacionais. A migração nova apenas adiciona campos de origem. Teste executa o SQL real sobre cópia temporária de registro antigo, sem escrever na tabela pública.
+
+## 29/10/2026 — Classes relacionais e referências licenciadas
+
+Manter colunas antigas como projeções evita remoção de dados e quebra abrupta de clientes. CharacterClass passa a representar a distribuição real; cliente antigo não pode salvar ficha multiclasse sem enviar essa distribuição. IDs de catálogo são versionados e nunca inferidos pelo nome. Catálogo permanece estático, revisável e independente das regras; fontes comerciais são apenas metadados, sem APIs privadas. Compatibilidade de opções antigas é explícita e parcial, não uma promessa de conversão automática. Exceções são decisões do mestre registradas no histórico; nenhuma habilidade proprietária é simulada.

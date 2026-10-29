@@ -1,17 +1,39 @@
 /** Dados de referência, separados do motor de regras. Adaptação pt-BR própria; ver docs/CATALOGO_SRD.md. */
 export const srdSource = {
   id: "srd-5.2.1",
+  name: "System Reference Document 5.2.1",
+  edition: "2024",
+  content: "redistributable",
   version: "5.2.1",
   license: "CC-BY-4.0",
   url: "https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf",
 } as const;
+export type CatalogSource = {
+  id: string;
+  name: string;
+  edition: string;
+  version: string;
+  license: string;
+  url: string;
+  content: "redistributable" | "reference-only" | "user-content";
+};
+export type CatalogKind =
+  | "class"
+  | "subclass"
+  | "species"
+  | "background"
+  | "feature"
+  | "feat"
+  | "spell";
+export type CatalogRecord = CatalogOption & { kind: CatalogKind };
 export type CatalogOption = {
   id: string;
   name: string;
   originalName: string;
   description: string;
   page: number;
-  source: typeof srdSource;
+  source: CatalogSource;
+  compatibility?: "native" | "legacy-manual";
   classId?: string;
   minimumLevel?: number;
 };

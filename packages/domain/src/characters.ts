@@ -46,6 +46,8 @@ function sheet(character: StoredCharacter, canEdit: boolean): CharacterSheet {
         rulesVersion: row.rulesVersion as "2024" | "2014" | "custom",
       })),
     multiclassAdjustment: character.multiclassAdjustment,
+    portraitUrl: character.portraitUrl,
+    biography: character.biography,
     id: character.id,
     campaignId: character.campaignId,
     ownerId: character.ownerId,

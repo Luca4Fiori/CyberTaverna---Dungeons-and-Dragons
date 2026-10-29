@@ -136,3 +136,5 @@ export const records: CatalogRecord[] = [
   ...library.feats.map((x) => ({ ...x, kind: "feat" as const })),
   ...library.spells.map((x) => ({ ...x, kind: "spell" as const })),
 ];
+
+export type CharacterCatalog = typeof library;

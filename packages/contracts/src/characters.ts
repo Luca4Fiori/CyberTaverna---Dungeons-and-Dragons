@@ -39,6 +39,8 @@ export const characterClassSchema = z
 export type CharacterClassInput = z.infer<typeof characterClassSchema>;
 export const characterFieldsSchema = z
   .object({
+    portraitUrl: z.union([z.literal(""), z.url().max(2048).refine(value => {const url=new URL(value);return url.protocol === "https:" && !url.username && !url.password;}, "Use uma URL HTTPS sem credenciais.")]).optional(),
+    biography: z.string().trim().max(2000).optional(),
     classes: z.array(characterClassSchema).min(1).max(20).optional(),
     multiclassAdjustment: z.string().trim().max(1000).optional(),
     name: z.string().trim().min(2).max(120),

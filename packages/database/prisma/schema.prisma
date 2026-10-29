@@ -144,6 +144,8 @@ model Character {
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
   classes CharacterClass[]
+  portraitUrl String @default("") @db.VarChar(2048)
+  biography String @default("") @db.VarChar(2000)
   multiclassAdjustment String @default("") @db.VarChar(1000)
   attributes CharacterAttribute[]
   history CharacterHistory[]

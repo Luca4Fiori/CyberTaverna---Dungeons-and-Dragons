@@ -3,114 +3,43 @@ import { useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
-import {
-  abilityKeys,
-  abilityLabels,
-  createCharacterSchema,
-  characterFieldsSchema,
-  type CharacterSheet,
-  type CharacterInput,
-} from "../../../../packages/contracts/src/characters";
-import { library } from "../../../../packages/catalog/src/library";
-const { classes, species, backgrounds, subclasses } = library;
+import { abilityKeys, abilityLabels, createCharacterSchema, characterFieldsSchema, type CharacterSheet, type CharacterInput } from "../../../../packages/contracts/src/characters";
+import { library, type CharacterCatalog } from "../../../../packages/catalog/src/library";
 import { ClassDistribution, emptyClass } from "./class-distribution";
 import { abilityModifier } from "../../../../packages/rules/src/index";
 import { CatalogChoice } from "./catalog-choice";
 import { apiRequest } from "./core-form";
 const subscribe = () => () => {};
-const stages = ["Identidade", "Origens", "Atributos e defesa", "Revisão"];
-export function CharacterEditor({
-  campaignId,
-  campaignName,
-  initial,
-  members,
-  ownId,
-  isGM,
-  canCreate,
-  returnSessionId,
-}: {
-  campaignId: string;
-  campaignName?: string;
-  initial?: CharacterSheet;
-  members: { userId: string; label: string }[];
-  ownId: string;
-  isGM: boolean;
-  canCreate: boolean;
-  returnSessionId?: string;
+const stages = ["Identidade", "Espécie e antecedente", "Classes", "Atributos", "Recursos", "Revisão"];
+export function CharacterEditor({campaignId,campaignName,initial,members,ownId,isGM,canCreate,returnSessionId,catalog = library}: {
+ campaignId:string; campaignName?:string; initial?:CharacterSheet; members:{userId:string;label:string}[];
+ ownId:string;isGM:boolean;canCreate:boolean;returnSessionId?:string;catalog?:CharacterCatalog;
 }) {
-  const router = useRouter();
-  const ready = useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-  const formRef = useRef<HTMLFormElement>(null);
-  const heading = useRef<HTMLHeadingElement>(null);
-  const [data, setData] = useState<CharacterInput>(
-    initial ?? {
-      name: "",
-      className: "",
-      species: "",
-      classId: null,
-      speciesId: null,
-      backgroundId: null,
-      subclassId: null,
-      backgroundName: "",
-      subclassName: "",
-      level: 1,
-      experience: 0,
-      hitPoints: 1,
-      maxHitPoints: 1,
-      temporaryHitPoints: 0,
-      armorClass: 10,
-      ownerId: ownId,
-      attributes: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
-    },
-  );
-  const [version, setVersion] = useState(initial?.version ?? 0);
-  const [step, setStep] = useState(0);
-  const [manual, setManual] = useState(Boolean(initial));
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  const [failed, setFailed] = useState(false);
-  const editable = initial ? initial.canEdit : canCreate;
-  const visible = (index: number) => manual || step === index;
-  const change = (values: Partial<CharacterInput>) => {
-    setData((previous) => ({ ...previous, ...values }));
-    setMessage("");
-  };
-  function advance() {
-    const fields = formRef.current?.querySelectorAll<
-      HTMLInputElement | HTMLSelectElement
-    >("section:not([hidden]) input, section:not([hidden]) select");
-    if (fields && [...fields].some((field) => !field.reportValidity())) return;
-    if (step === 1 && (!data.className.trim() || !data.species.trim())) {
-      setFailed(true);
-      setMessage(
-        "Escolha uma classe e uma espécie, ou preencha opções personalizadas.",
-      );
-      return;
-    }
-    if (step === 2) {
-      const parsed = characterFieldsSchema
-        .strip()
-        .refine((value) => value.hitPoints <= value.maxHitPoints, {
-          message: "PV atuais não podem ultrapassar os máximos.",
-        })
-        .safeParse(data);
-      if (!parsed.success) {
-        setFailed(true);
-        setMessage(parsed.error.issues.map((issue) => issue.message).join(" "));
-        return;
-      }
-    }
-    setMessage("");
-    setStep(step + 1);
-    setTimeout(() => heading.current?.focus(), 0);
+ const {species,backgrounds,subclasses} = catalog;
+ const router=useRouter();
+ const ready=useSyncExternalStore(subscribe,()=>true,()=>false);
+ const formRef=useRef<HTMLFormElement>(null), heading=useRef<HTMLHeadingElement>(null);
+ const [data,setData]=useState<CharacterInput>(()=> initial ? {...initial, classes: initial.classes?.length ? initial.classes : [{...emptyClass(),classId:initial.classId??null,className:initial.className,subclassId:initial.subclassId??null,subclassName:initial.subclassName??"",level:initial.level,rulesVersion:initial.classId?"2024":"custom"}]} : {
+ name:"",portraitUrl:"",biography:"",className:"",species:"",classId:null,speciesId:null,backgroundId:null,subclassId:null,backgroundName:"",subclassName:"",classes:[emptyClass()],level:1,experience:0,hitPoints:1,maxHitPoints:1,temporaryHitPoints:0,armorClass:10,ownerId:ownId,attributes:{STR:10,DEX:10,CON:10,INT:10,WIS:10,CHA:10}
+ });
+ const [version,setVersion]=useState(initial?.version??0), [step,setStep]=useState(0), [busy,setBusy]=useState(false), [message,setMessage]=useState(""), [failed,setFailed]=useState(false);
+ const editable=initial?initial.canEdit:canCreate;
+ const change=(values:Partial<CharacterInput>)=>{setData(previous=>({...previous,...values}));setMessage("");};
+ function move(index:number){setStep(index);setMessage("");setTimeout(()=>heading.current?.focus(),0);}
+ function advance(){
+  const fields=formRef.current?.querySelectorAll<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>("input,select,textarea");
+  if(fields&&[...fields].some(field=>!field.reportValidity()))return;
+  if(step===1&&!data.species.trim()){setFailed(true);setMessage("Selecione uma espécie ou informe uma opção personalizada.");return;}
+  if(step===2){
+   const rows=data.classes??[];
+   if(!rows.length||rows.some(row=>!row.className.trim())||data.level>20){setFailed(true);setMessage("Escolha suas classes e distribua entre 1 e 20 níveis no total.");return;}
   }
+  if(step===4){const parsed=characterFieldsSchema.strip().refine(value=>value.hitPoints<=value.maxHitPoints,{message:"PV atuais não podem ultrapassar os máximos."}).safeParse(data);if(!parsed.success){setFailed(true);setMessage(parsed.error.issues.map(issue=>issue.message).join(" "));return;}}
+  move(step+1);
+ }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!manual && step < 3) {
+    if (step < 5) {
       advance();
       return;
     }
@@ -120,6 +49,8 @@ export function CharacterEditor({
     // Envie apenas campos do contrato, sem metadados da resposta (id, modifiers, canEdit).
     const input = {
       classes: data.classes,
+      portraitUrl: data.portraitUrl,
+      biography: data.biography,
       multiclassAdjustment: data.multiclassAdjustment,
       name: data.name,
       className: data.className,
@@ -208,286 +139,29 @@ export function CharacterEditor({
       </label>
     );
   }
-  return (
-    <>
-      <p className="lead">
-        {campaignName ? `Campanha: ${campaignName}. ` : ""}A ficha permanece
-        vinculada a esta campanha.{" "}
-        {initial
-          ? "Edite os valores com o controle de versão preservado."
-          : "Escolha as origens, confira os atributos e revise antes de salvar."}
-      </p>
-      <form
-        ref={formRef}
-        className="character-sheet"
-        onSubmit={submit}
-        noValidate
-      >
-        <fieldset disabled={!ready || busy || !editable}>
-          <div className="sheet-heading">
-            <Sparkles size={26} />
-            <div>
-              <p className="eyebrow">REGISTRO DO AVENTUREIRO</p>
-              <h2 ref={heading} tabIndex={-1}>
-                {manual
-                  ? "Ficha de personagem"
-                  : `Etapa ${step + 1} de 4 · ${stages[step]}`}
-              </h2>
-            </div>
-            {initial && <span className="badge">VERSÃO {version}</span>}
-          </div>
-          {
-            <>
-              <ol
-                className="creation-progress"
-                aria-label="Progresso da criação"
-              >
-                {stages.map((stage, index) => (
-                  <li
-                    key={stage}
-                    aria-current={
-                      !manual && index === step ? "step" : undefined
-                    }
-                  >
-                    {index + 1}. {stage}
-                  </li>
-                ))}
-              </ol>
-              <button
-                type="button"
-                className="button"
-                onClick={() => {
-                  setManual(!manual);
-                  setStep(0);
-                  setMessage("");
-                }}
-              >
-                {manual ? "Usar criação guiada" : "Preenchimento manual"}
-              </button>
-            </>
-          }
-          <section hidden={!visible(0)} className="wizard-section">
-            <h3>Identidade</h3>
-            <div className="sheet-grid">
-              <label>
-                Nome do personagem
-                <input
-                  name="name"
-                  required
-                  minLength={2}
-                  maxLength={120}
-                  value={data.name}
-                  onChange={(event) => change({ name: event.target.value })}
-                />
-              </label>
-              {numberField("level", "Nível", 1, 20)}
-              {numberField("experience", "Experiência", 0, 2000000000)}
-              {isGM && (
-                <label>
-                  Responsável pela ficha
-                  <select
-                    name="ownerId"
-                    value={data.ownerId ?? ownId}
-                    onChange={(event) =>
-                      change({ ownerId: event.target.value })
-                    }
-                  >
-                    {members.map((member) => (
-                      <option key={member.userId} value={member.userId}>
-                        {member.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-            </div>
-          </section>
-          <section hidden={!visible(1)} className="wizard-section">
-            <h3>Origens e especialização</h3>
-            {data.classes ? (
-              <ClassDistribution
-                rows={data.classes}
-                onChange={(rows) =>
-                  change({
-                    classes: rows,
-                    level: rows.reduce((sum, row) => sum + row.level, 0),
-                    className: rows[0]!.className,
-                    classId: rows[0]!.classId,
-                    subclassName: rows[0]!.subclassName,
-                    subclassId: rows[0]!.subclassId,
-                  })
-                }
-              />
-            ) : (
-              <button
-                type="button"
-                className="button"
-                onClick={() =>
-                  change({
-                    classes: [
-                      {
-                        ...emptyClass(),
-                        classId: data.classId ?? null,
-                        className: data.className,
-                        subclassId: data.subclassId ?? null,
-                        subclassName: data.subclassName ?? "",
-                        level: data.level,
-                        rulesVersion: data.classId ? "2024" : "custom",
-                      },
-                    ],
-                  })
-                }
-              >
-                Distribuir níveis por classe
-              </button>
-            )}
-            {isGM && (
-              <label>
-                Ajuste de multiclasse autorizado pelo mestre
-                <input
-                  value={data.multiclassAdjustment ?? ""}
-                  maxLength={1000}
-                  onChange={(e) =>
-                    change({ multiclassAdjustment: e.target.value })
-                  }
-                />
-                <small>
-                  Justifique exceções aos requisitos. O ajuste e seu autor ficam
-                  no histórico.
-                </small>
-              </label>
-            )}
-            {!isGM && data.multiclassAdjustment && (
-              <p>Ajuste do mestre: {data.multiclassAdjustment}</p>
-            )}
-            {manual ? (
-              <div className="sheet-grid">
-                <label hidden={Boolean(data.classes)}>
-                  Classe
-                  <input
-                    name="className"
-                    required
-                    maxLength={80}
-                    value={data.className}
-                    onChange={(event) =>
-                      change({
-                        className: event.target.value,
-                        classId: null,
-                        subclassId: null,
-                      })
-                    }
-                  />
-                </label>
-                <label>
-                  Espécie
-                  <input
-                    name="species"
-                    required
-                    maxLength={80}
-                    value={data.species}
-                    onChange={(event) =>
-                      change({ species: event.target.value, speciesId: null })
-                    }
-                  />
-                </label>
-                <label>
-                  Antecedente
-                  <input
-                    maxLength={80}
-                    value={data.backgroundName ?? ""}
-                    onChange={(event) =>
-                      change({
-                        backgroundName: event.target.value,
-                        backgroundId: null,
-                      })
-                    }
-                  />
-                </label>
-                <label hidden={Boolean(data.classes)}>
-                  Subclasse
-                  <input
-                    maxLength={80}
-                    value={data.subclassName ?? ""}
-                    onChange={(event) =>
-                      change({
-                        subclassName: event.target.value,
-                        subclassId: null,
-                      })
-                    }
-                  />
-                </label>
-              </div>
-            ) : (
-              <div className="catalog-grid">
-                {!data.classes && (
-                  <CatalogChoice
-                    label="Classe"
-                    options={classes}
-                    id={data.classId}
-                    name={data.className}
-                    onChange={(classId, className) =>
-                      change({
-                        classId,
-                        className,
-                        subclassId: null,
-                        subclassName: "",
-                      })
-                    }
-                  />
-                )}
-                <CatalogChoice
-                  label="Espécie"
-                  options={species}
-                  id={data.speciesId}
-                  name={data.species}
-                  onChange={(speciesId, name) =>
-                    change({ speciesId, species: name })
-                  }
-                />
-                <CatalogChoice
-                  label="Antecedente"
-                  options={backgrounds}
-                  id={data.backgroundId}
-                  name={data.backgroundName ?? ""}
-                  onChange={(backgroundId, backgroundName) =>
-                    change({ backgroundId, backgroundName })
-                  }
-                  optional
-                />
-                {!data.classes &&
-                  (data.level >= 3 ? (
-                    <CatalogChoice
-                      label="Subclasse"
-                      options={subclasses.filter(
-                        (item) => item.classId === data.classId,
-                      )}
-                      id={data.subclassId}
-                      name={data.subclassName ?? ""}
-                      onChange={(subclassId, subclassName) =>
-                        change({ subclassId, subclassName })
-                      }
-                      optional
-                    />
-                  ) : (
-                    <p className="field-help">
-                      As subclasses do catálogo ficam disponíveis no nível 3.
-                      Você poderá escolhê-las ao evoluir.
-                    </p>
-                  ))}
-              </div>
-            )}
-            <p className="field-help">
-              As descrições orientam a escolha. Bônus de antecedentes, talentos,
-              habilidades e magias ainda não são aplicados automaticamente. O
-              preenchimento manual permite regras da sua mesa.
-            </p>
-          </section>
-          <section hidden={!visible(2)} className="wizard-section">
-            <h3>Atributos finais</h3>
-            <p>
-              Informe os valores combinados com o mestre, incluindo ajustes já
-              escolhidos. Os modificadores são calculados automaticamente.
-            </p>
+
+ return <>
+ <p className="lead">{campaignName}. Monte sua ficha, uma escolha de cada vez. Você só salva ao confirmar a revisão.</p>
+ <form ref={formRef} className="character-sheet" onSubmit={submit} noValidate>
+ <fieldset disabled={!ready||busy||!editable}>
+ <div className="sheet-heading"><Sparkles/><div><p className="eyebrow">REGISTRO DO AVENTUREIRO</p><h2 ref={heading} tabIndex={-1}>Etapa {step+1} de 6 · {stages[step]}</h2></div>{initial&&<span className="badge">VERSÃO {version}</span>}</div>
+ <ol className="creation-progress" aria-label="Progresso da criação">{stages.map((stage,index)=><li key={stage} aria-current={index===step?"step":undefined}>{index+1}. {stage}</li>)}</ol>
+ <section className="wizard-section" aria-label={stages[step]}>
+ {step===0&&<><h3>Quem é seu aventureiro?</h3><div className="sheet-grid">
+ <label>Nome do personagem<input name="name" required minLength={2} maxLength={120} value={data.name} onChange={e=>change({name:e.target.value})}/></label>
+ <label>Imagem do personagem (URL HTTPS)<input type="url" maxLength={2048} value={data.portraitUrl??""} onChange={e=>change({portraitUrl:e.target.value})}/><small>Opcional. Use uma imagem que você tenha direito de compartilhar. Upload de arquivos ainda não está disponível.</small></label>
+ <label>História e aparência<textarea maxLength={2000} value={data.biography??""} onChange={e=>change({biography:e.target.value})}/></label>
+ {numberField("experience","Experiência",0,2000000000)}
+ {isGM&&<label>Responsável pela ficha<select name="ownerId" value={data.ownerId??ownId} onChange={e=>change({ownerId:e.target.value})}>{members.map(member=><option key={member.userId} value={member.userId}>{member.label}</option>)}</select></label>}
+ </div></>}
+ {step===1&&<><h3>Suas origens</h3><p>Escolha uma espécie e, se desejar, um antecedente. Características e bônus ainda não são aplicados automaticamente.</p><div className="catalog-grid">
+ <CatalogChoice label="Espécie" options={species} id={data.speciesId} name={data.species} onChange={(speciesId,species)=>change({speciesId,species})}/>
+ <CatalogChoice label="Antecedente" options={backgrounds} id={data.backgroundId} name={data.backgroundName??""} optional onChange={(backgroundId,backgroundName)=>change({backgroundId,backgroundName})}/>
+ </div></>}
+ {step===2&&<><ClassDistribution rows={data.classes!} catalog={catalog} onChange={rows=>change({classes:rows,level:rows.reduce((sum,row)=>sum+row.level,0),className:rows[0]!.className,classId:rows[0]!.classId,subclassName:rows[0]!.subclassName,subclassId:rows[0]!.subclassId})}/>
+ {isGM?<details><summary>Ajustes autorizados pelo mestre</summary><label>Ajuste de multiclasse autorizado pelo mestre<textarea maxLength={1000} value={data.multiclassAdjustment??""} onChange={e=>change({multiclassAdjustment:e.target.value})}/></label><p>A justificativa e o autor ficam registrados no histórico.</p></details>:data.multiclassAdjustment&&<p>Ajuste do mestre: {data.multiclassAdjustment}</p>}
+ </>}
+ {step===3&&<><h3>Atributos finais</h3><p>Informe os valores acordados com o mestre. Os modificadores são calculados automaticamente.</p>
             <div className="ability-grid">
               {abilityKeys.map((ability) => {
                 const value = data.attributes[ability];
@@ -524,20 +198,11 @@ export function CharacterEditor({
                 );
               })}
             </div>
-            <div className="sheet-grid vitality">
-              {numberField("hitPoints", "PV atuais", 0, 100000)}
-              {numberField("maxHitPoints", "PV máximos", 1, 100000)}
-              {numberField("temporaryHitPoints", "PV temporários", 0, 100000)}
-              {numberField("armorClass", "Classe de armadura", 0, 100)}
-            </div>
-            <p className="field-help">
-              PV e CA têm preenchimento manual. Confirme-os com o mestre antes
-              de salvar.
-            </p>
-          </section>
-          {!manual && step === 3 && (
-            <section className="wizard-section">
-              <h3>Revise sua ficha</h3>
+</>}
+ {step===4&&<><h3>Recursos disponíveis</h3><p>Já disponíveis: pontos de vida e classe de armadura, preenchidos manualmente.</p><div className="sheet-grid">
+ {numberField("hitPoints","PV atuais",0,100000)}{numberField("maxHitPoints","PV máximos",1,100000)}{numberField("temporaryHitPoints","PV temporários",0,100000)}{numberField("armorClass","Classe de armadura",0,100)}
+ </div><p className="field-help">Habilidades, magias e equipamentos serão adicionados em próximas etapas. Nenhum recurso dessas categorias é concedido automaticamente nesta versão.</p></>}
+ {step===5&&<><h3>Revise sua ficha</h3>
               <dl className="review-grid">
                 {[
                   ["Campanha", campaignName ?? campaignId],
@@ -595,78 +260,17 @@ export function CharacterEditor({
                   </div>
                 ))}
               </dl>
-              <p>
-                Referências externas não aplicam regras ou habilidades
-                automaticamente.
-              </p>
-              <p>
-                Nada foi salvo ainda. Volte para ajustar suas escolhas ou
-                confirme abaixo.
-              </p>
-            </section>
-          )}
-          {editable && (
-            <div className="inline-links">
-              {!manual && step > 0 && (
-                <button
-                  type="button"
-                  className="button"
-                  onClick={() => {
-                    setStep(step - 1);
-                    setMessage("");
-                  }}
-                >
-                  Voltar
-                </button>
-              )}
-              {!manual && step < 3 ? (
-                <button
-                  key="advance"
-                  type="button"
-                  className="button primary"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    advance();
-                  }}
-                >
-                  Continuar
-                </button>
-              ) : (
-                <button key="save" type="submit" className="button primary">
-                  {busy ? "Salvando…" : "Salvar personagem"}
-                </button>
-              )}
-            </div>
-          )}
-        </fieldset>
-        {message && (
-          <p
-            role={failed ? "alert" : "status"}
-            className={failed ? "form-error" : "form-success"}
-          >
-            {message}
-          </p>
-        )}
-        {!editable && (
-          <p className="lead">
-            Ficha somente para leitura. A campanha está arquivada ou o mestre
-            bloqueou esta operação.
-          </p>
-        )}
-      </form>
-      {returnSessionId && (
-        <Link
-          className="button"
-          href={`/campanhas/${campaignId}/sessoes/${returnSessionId}`}
-        >
-          Voltar à sessão
-        </Link>
-      )}
-      <p className="sheet-help">
-        Catálogo baseado no <Link href="/atribuicoes">SRD 5.2.1</Link>, com
-        descrições próprias em português. A seleção não substitui o motor
-        completo de regras.
-      </p>
-    </>
-  );
+
+ {data.portraitUrl&&<p><a href={data.portraitUrl} target="_blank" rel="noopener noreferrer">Abrir imagem do personagem</a></p>}
+ {data.biography&&<p>{data.biography}</p>}
+ <p>Referências externas não aplicam regras automaticamente. Confira suas escolhas antes de salvar.</p></>}
+ </section>
+ <div className="inline-links">{step>0&&<button type="button" className="button" onClick={()=>move(step-1)}>Anterior</button>}{step<5?<button key="advance" type="button" className="button primary" onClick={e=>{e.preventDefault();advance();}}>Continuar</button>:editable&&<button key="save" type="submit" className="button primary">{busy?"Salvando…":"Salvar personagem"}</button>}</div>
+ </fieldset>
+ {message&&<p role={failed?"alert":"status"} className={failed?"form-error":"form-success"}>{message}</p>}
+ {!editable&&<p>Ficha somente para leitura. A campanha está arquivada ou o mestre bloqueou a edição.</p>}
+ </form>
+ {returnSessionId&&<Link className="button" href={`/campanhas/${campaignId}/sessoes/${returnSessionId}`}>Voltar à sessão</Link>}
+ <p className="sheet-help">Consulte as <Link href="/atribuicoes">fontes e atribuições</Link>. As referências não substituem as regras originais.</p>
+ </>;
 }

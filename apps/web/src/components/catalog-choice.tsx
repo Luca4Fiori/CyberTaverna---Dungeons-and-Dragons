@@ -21,7 +21,8 @@ export function CatalogChoice({
 }) {
   const key = useId();
   const [query, setQuery] = useState("");
-  const [custom, setCustom] = useState(!id && Boolean(name));
+  const [manualSelected, setManualSelected] = useState(false);
+  const custom = !id && (manualSelected || Boolean(name));
   const [edition, setEdition] = useState("");
   const [source, setSource] = useState("");
   const filtered = searchCatalog(options, query).filter(
@@ -46,7 +47,7 @@ export function CatalogChoice({
           onChange={(event) => setQuery(event.target.value)}
         />
       </label>
-      <div className="sheet-grid">
+      <details><summary>Opções avançadas de {label.toLowerCase()}</summary><div className="sheet-grid">
         <label>
           Edição de {label.toLowerCase()}
           <select
@@ -77,7 +78,7 @@ export function CatalogChoice({
             ))}
           </select>
         </label>
-      </div>
+      </div><button type="button" className="button" onClick={()=>{setSource("");setEdition("");setQuery("");}}>Limpar filtros de {label.toLowerCase()}</button></details>
       <label>
         {label}
         <select
@@ -85,7 +86,7 @@ export function CatalogChoice({
           value={custom ? "custom" : (id ?? "")}
           onChange={(event) => {
             const value = event.target.value;
-            setCustom(value === "custom");
+            setManualSelected(value === "custom");
             const item = options.find((option) => option.id === value);
             onChange(item?.id ?? null, item?.name ?? "");
           }}
@@ -95,14 +96,14 @@ export function CatalogChoice({
           </option>
           {rows.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.name}
+              {item.name} — {item.source.content === "reference-only" ? "Referência" : item.source.content === "user-content" ? "Personalizada" : "SRD"}
             </option>
           ))}
           <option value="custom">Personalizado / preenchimento manual</option>
         </select>
       </label>
-      {!filtered.length && query && (
-        <p>Nenhuma opção encontrada. Você pode usar uma opção personalizada.</p>
+      {!filtered.length && (
+        <p>Nenhuma opção encontrada para estes filtros e nível. Limpe os filtros ou selecione uma opção personalizada.</p>
       )}
       {custom && (
         <label>

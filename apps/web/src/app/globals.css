@@ -899,3 +899,13 @@ fieldset:disabled {
     flex: 1 1 40%;
   }
 }
+
+.class-cards { display: grid; gap: 1rem; }
+.class-card { min-width: 0; padding: 1.25rem; border: 1px solid #D3AE6355; border-radius: 1rem; background: #10151F80; }
+.class-card header { display: flex; gap: 1rem; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+.class-card h4 { color: #A6DCEF; font-size: 1.2rem; }
+.progression-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 1rem; }
+.character-sheet details { padding: .75rem 0; }
+.character-sheet summary { cursor: pointer; color: #D3AE63; margin-bottom: .5rem; }
+.character-sheet textarea { min-height: 100px; width: 100%; }
+.creation-progress { flex-wrap: wrap; }

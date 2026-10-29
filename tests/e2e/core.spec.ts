@@ -1,4 +1,4 @@
-import { test as base, expect, type APIRequestContext } from "@playwright/test";
+import { test as base, expect, type Page, type APIRequestContext } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { testDatabase } from "../database";
 const origin = "http://localhost:3100";
@@ -34,6 +34,8 @@ const test = base.extend<{ run: string }>({
     }
   },
 });
+async function nextStep(page: Page, count=1) {for(let i=0;i<count;i++) await page.getByRole("button",{name:"Continuar",exact:true}).click();}
+async function previousStep(page: Page, count=1) {for(let i=0;i<count;i++) await page.getByRole("button",{name:"Anterior",exact:true}).click();}
 async function register(request: APIRequestContext, email: string) {
   const result = await request.post("/api/auth/register", {
     headers: { Origin: origin },
@@ -321,35 +323,40 @@ test("fluxo RPG: convite, ficha do jogador, edição do mestre e sessão compart
         exact: true,
       })
       .click();
-    await player.getByRole("button", { name: "Preenchimento manual" }).click();
     await player
       .getByLabel("Nome do personagem", { exact: true })
       .fill("Aurora");
-    await player.getByLabel("Classe", { exact: true }).fill("Guerreiro");
-    await player.getByLabel("Espécie", { exact: true }).fill("Humano");
+    await nextStep(player);
+    await player.getByLabel("Espécie",{exact:true}).selectOption("srd521-human");
+    await nextStep(player);
+    await player.getByLabel("Classe 1",{exact:true}).selectOption("custom");
+    await player.getByLabel("Classe 1 personalizada",{exact:true}).fill("Guerreiro");
+    await nextStep(player);
     await player.getByLabel("Força", { exact: true }).fill("17");
     await expect(
       player.getByLabel("Modificador de Força", { exact: true }),
     ).toHaveText("+3");
+    await nextStep(player);
     await player.getByLabel("PV máximos", { exact: true }).fill("12");
     await player.getByLabel("PV atuais", { exact: true }).fill("12");
+    await nextStep(player);
     await player.getByRole("button", { name: "Salvar personagem" }).click();
     await expect(player).toHaveURL(/\/personagens\/[\da-f-]+$/);
     const characterUrl = player.url();
     await page.goto(characterUrl);
-    await page.getByLabel("PV atuais", { exact: true }).fill("7");
+
     await page
       .getByLabel("Nome do personagem", { exact: true })
       .fill("Aurora do inverno");
+    await nextStep(page,4);
+    await page.getByLabel("PV atuais",{exact:true}).fill("7");
+    await nextStep(page);
     await page.getByRole("button", { name: "Salvar personagem" }).click();
     await expect(page.getByText("VERSÃO 1", { exact: true })).toBeVisible();
     await player.reload();
-    await expect(player.getByLabel("PV atuais", { exact: true })).toHaveValue(
-      "7",
-    );
-    await expect(
-      player.getByLabel("Nome do personagem", { exact: true }),
-    ).toHaveValue("Aurora do inverno");
+    await expect(player.getByLabel("Nome do personagem",{exact:true})).toHaveValue("Aurora do inverno");
+    await nextStep(player,4);
+    await expect(player.getByLabel("PV atuais",{exact:true})).toHaveValue("7");
     await page.goto(`/campanhas/${campaignId}/sessoes`);
     await page.getByLabel("Título da sessão").fill("Travessia congelada");
     await page
@@ -414,31 +421,27 @@ test("criador guiado contextual, catálogo, revisão, retorno à sessão e lista
     .getByRole("link", { name: "Criar personagem nesta campanha" })
     .click();
   await expect(
-    page.getByRole("heading", { name: /Etapa 1 de 4/ }),
+    page.getByRole("heading", { name: /Etapa 1 de 6/ }),
   ).toBeVisible();
   await page
     .getByLabel("Nome do personagem", { exact: true })
     .fill("Estrela do gelo");
-  await page.getByLabel("Nível", { exact: true }).fill("3");
-  await page.getByRole("button", { name: "Continuar", exact: true }).click();
-  await page.getByLabel("Buscar classe no catálogo").fill("guerreiro");
-  await page
-    .getByLabel("Classe", { exact: true })
-    .selectOption("srd521-fighter");
-  await expect(page.getByText(/Treinamento marcial/)).toBeVisible();
-  await page.getByLabel("Buscar espécie no catálogo").fill("humano");
-  await page
-    .getByLabel("Espécie", { exact: true })
-    .selectOption("srd521-human");
-  await page
-    .getByLabel("Antecedente", { exact: true })
-    .selectOption("srd521-soldier");
-  await page
-    .getByLabel("Subclasse", { exact: true })
-    .selectOption("srd521-champion");
-  await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await nextStep(page);
+  await expect(page.getByLabel("Nome do personagem",{exact:true})).toHaveCount(0);
+  await page.getByLabel("Espécie",{exact:true}).selectOption("srd521-human");
+  await page.getByLabel("Antecedente",{exact:true}).selectOption("srd521-soldier");
+  await previousStep(page);
+  await expect(page.getByLabel("Nome do personagem",{exact:true})).toHaveValue("Estrela do gelo");
+  await nextStep(page);
+  await expect(page.getByLabel("Espécie",{exact:true})).toHaveValue("srd521-human");
+  await nextStep(page);
+  await page.getByLabel("Classe 1",{exact:true}).selectOption("srd521-fighter");
+  await page.getByLabel("Níveis na classe 1",{exact:true}).fill("3");
+  await page.getByLabel("Subclasse 1",{exact:true}).selectOption("srd521-champion");
+  await nextStep(page);
   await page.getByLabel("Força", { exact: true }).fill("17");
   await expect(page.getByLabel("Modificador de Força")).toHaveText("+3");
+  await nextStep(page);
   await page.getByLabel("PV máximos", { exact: true }).fill("20");
   await page.getByLabel("PV atuais", { exact: true }).fill("20");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
@@ -488,18 +491,14 @@ test("criador guiado contextual, catálogo, revisão, retorno à sessão e lista
   });
   await page.goto("/personagens");
   await page.getByRole("link", { name: /Estrela do gelo/ }).click();
-  await expect(page.getByLabel("Classe", { exact: true })).toHaveValue(
-    "Guerreiro",
-  );
-  await page.getByLabel("Espécie", { exact: true }).fill("Povo do inverno");
-  await page.getByRole("button", { name: "Salvar personagem" }).click();
-  await expect(
-    page.getByRole("status").filter({ hasText: "Ficha salva com sucesso." }),
-  ).toBeVisible();
-  await page.reload();
-  await expect(page.getByLabel("Espécie", { exact: true })).toHaveValue(
-    "Povo do inverno",
-  );
+  await nextStep(page);
+  await page.getByLabel("Espécie",{exact:true}).selectOption("custom");
+  await page.getByLabel("Espécie personalizada",{exact:true}).fill("Povo do inverno");
+  await nextStep(page,4);
+  await page.getByRole("button",{name:"Salvar personagem"}).click();
+  await expect(page.getByText("Ficha salva com sucesso.")).toBeVisible();
+  await page.reload(); await nextStep(page);
+  await expect(page.getByLabel("Espécie personalizada",{exact:true})).toHaveValue("Povo do inverno");
 });
 
 test("multiclasse com referências externas persiste e reabre no computador e celular", async ({
@@ -520,9 +519,9 @@ test("multiclasse com referências externas persiste e reabre no computador e ce
     .getByLabel("Nome do personagem", { exact: true })
     .fill("Enxame da Misericórdia");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Distribuir níveis por classe" })
-    .click();
+  await page.getByLabel("Espécie",{exact:true}).selectOption("motm2022-shadar-kai");
+  await page.getByLabel("Antecedente",{exact:true}).selectOption("scag2015-mercenary-veteran");
+  await nextStep(page);
   await page
     .getByLabel("Buscar classe 1 no catálogo", { exact: true })
     .fill("monk");
@@ -530,6 +529,7 @@ test("multiclasse com referências externas persiste e reabre no computador e ce
     .getByLabel("Classe 1", { exact: true })
     .selectOption("srd521-monk");
   await page.getByLabel("Níveis na classe 1", { exact: true }).fill("13");
+  await page.getByText("Opções avançadas de subclasse 1",{exact:true}).click();
   await page
     .getByLabel("Fonte de subclasse 1", { exact: true })
     .selectOption("phb-2024");
@@ -541,24 +541,20 @@ test("multiclasse com referências externas persiste e reabre no computador e ce
     .getByLabel("Classe 2", { exact: true })
     .selectOption("srd521-ranger");
   await page.getByLabel("Níveis na classe 2", { exact: true }).fill("7");
+  await page.getByText("Opções avançadas de subclasse 2",{exact:true}).click();
   await page
     .getByLabel("Edição de subclasse 2", { exact: true })
     .selectOption("2014");
   await page
     .getByLabel("Subclasse 2", { exact: true })
     .selectOption("tce2020-swarmkeeper");
-  await page
-    .getByLabel("Espécie", { exact: true })
-    .selectOption("motm2022-shadar-kai");
-  await page
-    .getByLabel("Antecedente", { exact: true })
-    .selectOption("scag2015-mercenary-veteran");
-  await expect(page.getByText(/Total 20/)).toBeVisible();
+  await expect(page.getByText(/total 20/)).toBeVisible();
   await expect(page.getByText(/Referência externa/).first()).toBeVisible();
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
   await page.getByLabel("Destreza", { exact: true }).fill("18");
   await page.getByLabel("Sabedoria", { exact: true }).fill("18");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await nextStep(page);
   await expect(page.getByText(/Monge 13/)).toBeVisible();
   await page.screenshot({
     path: test.info().outputPath("multiclasse-revisao.png"),
@@ -568,10 +564,11 @@ test("multiclasse com referências externas persiste e reabre no computador e ce
   await expect(page).toHaveURL(
     new RegExp(`/campanhas/${campaign.id}/personagens/[0-9a-f-]{36}$`),
   );
-  await page.reload();
+  await page.reload(); await nextStep(page,2);
   await expect(
     page.getByLabel("Níveis na classe 1", { exact: true }),
   ).toHaveValue("13");
+  await page.getByRole("button",{name:"Editar classe 2",exact:true}).click();
   await expect(
     page.getByLabel("Níveis na classe 2", { exact: true }),
   ).toHaveValue("7");

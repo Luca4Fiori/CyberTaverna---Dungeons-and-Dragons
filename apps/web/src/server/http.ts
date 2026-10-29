@@ -26,7 +26,10 @@ export function sessionCookie(
   });
   return response;
 }
-export async function readMutation(request: NextRequest): Promise<unknown> {
+export async function readMutation(
+  request: NextRequest,
+  maxBytes = 16384,
+): Promise<unknown> {
   if (
     request.headers.get("origin") !== appOrigin() ||
     request.headers.get("sec-fetch-site") === "cross-site"
@@ -47,7 +50,7 @@ export async function readMutation(request: NextRequest): Promise<unknown> {
     const { done, value } = await reader.read();
     if (done) break;
     length += value.length;
-    if (length > 16384) {
+    if (length > maxBytes) {
       await reader.cancel();
       throw new DomainError(413, "BODY_TOO_LARGE", "Solicitação muito grande.");
     }

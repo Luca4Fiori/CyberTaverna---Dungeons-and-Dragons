@@ -29,7 +29,12 @@ async function handle(request: NextRequest, context: Context) {
     const token = requestToken(request);
     let body: unknown = {};
     if (method !== "GET") {
-      body = await readMutation(request);
+      const characterWrite =
+        path[0] === "campaigns" &&
+        path[2] === "characters" &&
+        ((path.length === 3 && method === "POST") ||
+          (path.length === 4 && method === "PATCH"));
+      body = await readMutation(request, characterWrite ? 262144 : 16384);
       // Global protege hash de senha sem confiar em X-Forwarded-For fornecido pelo cliente.
       await consumeRateLimit(database(), "global-write", "all", 300, 60000);
       if (token)

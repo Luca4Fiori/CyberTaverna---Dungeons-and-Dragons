@@ -64,3 +64,7 @@ Após atualizar, execute `npm run db:generate`, `npm run db:deploy` e `npm run d
 Fichas suportam distribuição relacional de classes e subclasses, total calculado, requisitos e ajustes autorizados pelo mestre. No criador, use **Distribuir níveis por classe** e **Adicionar outra classe**. Filtros pesquisam opções por nome em português/inglês, fonte e edição. Referências comerciais não aplicam habilidades automaticamente.
 
 Após atualizar: `npm run db:generate` e `npm run db:deploy`. A quinta migração preserva as fichas existentes. Consulte [modelo, compatibilidade e fontes](docs/MULTICLASSE.md). Não há novas variáveis de ambiente.
+
+## Assistente narrativo
+
+Criação e edição agora usam sete etapas independentes, incluindo História e personalidade. Há seis campos narrativos opcionais, persistência com histórico e revisão antes de salvar. Consulte [CRIADOR_NARRATIVO.md](docs/CRIADOR_NARRATIVO.md). Execute `npm run db:generate` e `npm run db:deploy` ao atualizar. Não há novas variáveis de ambiente. O catálogo persistente e seu importador permanecem pendentes.

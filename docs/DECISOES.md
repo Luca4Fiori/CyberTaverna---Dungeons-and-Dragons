@@ -54,3 +54,7 @@ Não houve migração de associação de personagens: campaignId e ownerId já e
 ## 29/10/2026 — Classes relacionais e referências licenciadas
 
 Manter colunas antigas como projeções evita remoção de dados e quebra abrupta de clientes. CharacterClass passa a representar a distribuição real; cliente antigo não pode salvar ficha multiclasse sem enviar essa distribuição. IDs de catálogo são versionados e nunca inferidos pelo nome. Catálogo permanece estático, revisável e independente das regras; fontes comerciais são apenas metadados, sem APIs privadas. Compatibilidade de opções antigas é explícita e parcial, não uma promessa de conversão automática. Exceções são decisões do mestre registradas no histórico; nenhuma habilidade proprietária é simulada.
+
+## 29/10/2026 — Sete etapas e narrativa separada
+
+A nova orientação priorizou narrativa e redesign; a importação persistente do catálogo foi adiada. Separar estado do formulário da etapa montada mantém escolhas sem apresentar todas as seções. A revisão é o único ponto de gravação, sem rascunho implícito. Textos narrativos são colunas próprias e não geram efeitos mecânicos. Limites de 5.000/20.000 caracteres e corpo de 256 KiB em fichas permitem histórias extensas mantendo limites verificáveis. HTML é exibido como texto, sem conteúdo rico executável.

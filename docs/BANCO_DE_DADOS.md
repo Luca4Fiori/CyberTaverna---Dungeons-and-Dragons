@@ -42,3 +42,7 @@ Character recebe classId, speciesId, backgroundId e subclassId opcionais (IDs do
 ## Migração 202610290001_multiclass
 
 `CharacterClass` tem chave composta characterId/position, FK Character com CASCADE, classe/subclasse, nível, versão de regras, fontes separadas e array opcional de níveis de aquisição. CHECKs limitam posição e nível. `Character.multiclassAdjustment` guarda a justificativa atual; aprovação e alterações são preservadas no histórico versionado com actorId. Migração copia cada ficha para um vínculo, preservando colunas antigas, dono, campanha e referências de sessão. Soma, identidade de catálogo e requisitos são validados no serviço, sob bloqueio transacional da campanha. [Contrato e limitações](MULTICLASSE.md).
+
+## Narrativa do personagem
+
+A migração 202610290003_character_narrative acrescenta description, personality, ideals, bonds, flaws e backstory como TEXT NOT NULL DEFAULT ''. Copia biography para backstory quando há texto anterior e preserva biography. Não modifica vínculos, classes, atributos, versões ou antecedentes. Limites de entrada ficam nos contratos Zod; alterações autorizadas entram no histórico da ficha.

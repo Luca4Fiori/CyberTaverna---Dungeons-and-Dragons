@@ -1,4 +1,9 @@
-import { test as base, expect, type Page, type APIRequestContext } from "@playwright/test";
+import {
+  test as base,
+  expect,
+  type Page,
+  type APIRequestContext,
+} from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { testDatabase } from "../database";
 const origin = "http://localhost:3100";
@@ -34,8 +39,14 @@ const test = base.extend<{ run: string }>({
     }
   },
 });
-async function nextStep(page: Page, count=1) {for(let i=0;i<count;i++) await page.getByRole("button",{name:"Continuar",exact:true}).click();}
-async function previousStep(page: Page, count=1) {for(let i=0;i<count;i++) await page.getByRole("button",{name:"Anterior",exact:true}).click();}
+async function nextStep(page: Page, count = 1) {
+  for (let i = 0; i < count; i++)
+    await page.getByRole("button", { name: "Continuar", exact: true }).click();
+}
+async function previousStep(page: Page, count = 1) {
+  for (let i = 0; i < count; i++)
+    await page.getByRole("button", { name: "Anterior", exact: true }).click();
+}
 async function register(request: APIRequestContext, email: string) {
   const result = await request.post("/api/auth/register", {
     headers: { Origin: origin },
@@ -327,19 +338,22 @@ test("fluxo RPG: convite, ficha do jogador, edição do mestre e sessão compart
       .getByLabel("Nome do personagem", { exact: true })
       .fill("Aurora");
     await nextStep(player);
-    await player.getByLabel("Espécie",{exact:true}).selectOption("srd521-human");
+    await player
+      .getByLabel("Espécie", { exact: true })
+      .selectOption("srd521-human");
     await nextStep(player);
-    await player.getByLabel("Classe 1",{exact:true}).selectOption("custom");
-    await player.getByLabel("Classe 1 personalizada",{exact:true}).fill("Guerreiro");
+    await player.getByLabel("Classe 1", { exact: true }).selectOption("custom");
+    await player
+      .getByLabel("Classe 1 personalizada", { exact: true })
+      .fill("Guerreiro");
     await nextStep(player);
     await player.getByLabel("Força", { exact: true }).fill("17");
     await expect(
       player.getByLabel("Modificador de Força", { exact: true }),
     ).toHaveText("+3");
-    await nextStep(player);
     await player.getByLabel("PV máximos", { exact: true }).fill("12");
     await player.getByLabel("PV atuais", { exact: true }).fill("12");
-    await nextStep(player);
+    await nextStep(player, 3);
     await player.getByRole("button", { name: "Salvar personagem" }).click();
     await expect(player).toHaveURL(/\/personagens\/[\da-f-]+$/);
     const characterUrl = player.url();
@@ -348,15 +362,19 @@ test("fluxo RPG: convite, ficha do jogador, edição do mestre e sessão compart
     await page
       .getByLabel("Nome do personagem", { exact: true })
       .fill("Aurora do inverno");
-    await nextStep(page,4);
-    await page.getByLabel("PV atuais",{exact:true}).fill("7");
-    await nextStep(page);
+    await nextStep(page, 3);
+    await page.getByLabel("PV atuais", { exact: true }).fill("7");
+    await nextStep(page, 3);
     await page.getByRole("button", { name: "Salvar personagem" }).click();
     await expect(page.getByText("VERSÃO 1", { exact: true })).toBeVisible();
     await player.reload();
-    await expect(player.getByLabel("Nome do personagem",{exact:true})).toHaveValue("Aurora do inverno");
-    await nextStep(player,4);
-    await expect(player.getByLabel("PV atuais",{exact:true})).toHaveValue("7");
+    await expect(
+      player.getByLabel("Nome do personagem", { exact: true }),
+    ).toHaveValue("Aurora do inverno");
+    await nextStep(player, 3);
+    await expect(player.getByLabel("PV atuais", { exact: true })).toHaveValue(
+      "7",
+    );
     await page.goto(`/campanhas/${campaignId}/sessoes`);
     await page.getByLabel("Título da sessão").fill("Travessia congelada");
     await page
@@ -421,30 +439,43 @@ test("criador guiado contextual, catálogo, revisão, retorno à sessão e lista
     .getByRole("link", { name: "Criar personagem nesta campanha" })
     .click();
   await expect(
-    page.getByRole("heading", { name: /Etapa 1 de 6/ }),
+    page.getByRole("heading", { name: /Etapa 1 de 7/ }),
   ).toBeVisible();
   await page
     .getByLabel("Nome do personagem", { exact: true })
     .fill("Estrela do gelo");
   await nextStep(page);
-  await expect(page.getByLabel("Nome do personagem",{exact:true})).toHaveCount(0);
-  await page.getByLabel("Espécie",{exact:true}).selectOption("srd521-human");
-  await page.getByLabel("Antecedente",{exact:true}).selectOption("srd521-soldier");
+  await expect(
+    page.getByLabel("Nome do personagem", { exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByLabel("Espécie", { exact: true })
+    .selectOption("srd521-human");
+  await page
+    .getByLabel("Antecedente", { exact: true })
+    .selectOption("srd521-soldier");
   await previousStep(page);
-  await expect(page.getByLabel("Nome do personagem",{exact:true})).toHaveValue("Estrela do gelo");
+  await expect(
+    page.getByLabel("Nome do personagem", { exact: true }),
+  ).toHaveValue("Estrela do gelo");
   await nextStep(page);
-  await expect(page.getByLabel("Espécie",{exact:true})).toHaveValue("srd521-human");
+  await expect(page.getByLabel("Espécie", { exact: true })).toHaveValue(
+    "srd521-human",
+  );
   await nextStep(page);
-  await page.getByLabel("Classe 1",{exact:true}).selectOption("srd521-fighter");
-  await page.getByLabel("Níveis na classe 1",{exact:true}).fill("3");
-  await page.getByLabel("Subclasse 1",{exact:true}).selectOption("srd521-champion");
+  await page
+    .getByLabel("Classe 1", { exact: true })
+    .selectOption("srd521-fighter");
+  await page.getByLabel("Níveis na classe 1", { exact: true }).fill("3");
+  await page
+    .getByLabel("Subclasse 1", { exact: true })
+    .selectOption("srd521-champion");
   await nextStep(page);
   await page.getByLabel("Força", { exact: true }).fill("17");
   await expect(page.getByLabel("Modificador de Força")).toHaveText("+3");
-  await nextStep(page);
   await page.getByLabel("PV máximos", { exact: true }).fill("20");
   await page.getByLabel("PV atuais", { exact: true }).fill("20");
-  await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await nextStep(page, 3);
   await expect(
     page.getByRole("heading", { name: "Revise sua ficha" }),
   ).toBeVisible();
@@ -492,13 +523,18 @@ test("criador guiado contextual, catálogo, revisão, retorno à sessão e lista
   await page.goto("/personagens");
   await page.getByRole("link", { name: /Estrela do gelo/ }).click();
   await nextStep(page);
-  await page.getByLabel("Espécie",{exact:true}).selectOption("custom");
-  await page.getByLabel("Espécie personalizada",{exact:true}).fill("Povo do inverno");
-  await nextStep(page,4);
-  await page.getByRole("button",{name:"Salvar personagem"}).click();
+  await page.getByLabel("Espécie", { exact: true }).selectOption("custom");
+  await page
+    .getByLabel("Espécie personalizada", { exact: true })
+    .fill("Povo do inverno");
+  await nextStep(page, 5);
+  await page.getByRole("button", { name: "Salvar personagem" }).click();
   await expect(page.getByText("Ficha salva com sucesso.")).toBeVisible();
-  await page.reload(); await nextStep(page);
-  await expect(page.getByLabel("Espécie personalizada",{exact:true})).toHaveValue("Povo do inverno");
+  await page.reload();
+  await nextStep(page);
+  await expect(
+    page.getByLabel("Espécie personalizada", { exact: true }),
+  ).toHaveValue("Povo do inverno");
 });
 
 test("multiclasse com referências externas persiste e reabre no computador e celular", async ({
@@ -519,8 +555,12 @@ test("multiclasse com referências externas persiste e reabre no computador e ce
     .getByLabel("Nome do personagem", { exact: true })
     .fill("Enxame da Misericórdia");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
-  await page.getByLabel("Espécie",{exact:true}).selectOption("motm2022-shadar-kai");
-  await page.getByLabel("Antecedente",{exact:true}).selectOption("scag2015-mercenary-veteran");
+  await page
+    .getByLabel("Espécie", { exact: true })
+    .selectOption("motm2022-shadar-kai");
+  await page
+    .getByLabel("Antecedente", { exact: true })
+    .selectOption("scag2015-mercenary-veteran");
   await nextStep(page);
   await page
     .getByLabel("Buscar classe 1 no catálogo", { exact: true })
@@ -529,7 +569,9 @@ test("multiclasse com referências externas persiste e reabre no computador e ce
     .getByLabel("Classe 1", { exact: true })
     .selectOption("srd521-monk");
   await page.getByLabel("Níveis na classe 1", { exact: true }).fill("13");
-  await page.getByText("Opções avançadas de subclasse 1",{exact:true}).click();
+  await page
+    .getByText("Opções avançadas de subclasse 1", { exact: true })
+    .click();
   await page
     .getByLabel("Fonte de subclasse 1", { exact: true })
     .selectOption("phb-2024");
@@ -541,20 +583,37 @@ test("multiclasse com referências externas persiste e reabre no computador e ce
     .getByLabel("Classe 2", { exact: true })
     .selectOption("srd521-ranger");
   await page.getByLabel("Níveis na classe 2", { exact: true }).fill("7");
-  await page.getByText("Opções avançadas de subclasse 2",{exact:true}).click();
+  await page
+    .getByText("Opções avançadas de subclasse 2", { exact: true })
+    .click();
   await page
     .getByLabel("Edição de subclasse 2", { exact: true })
     .selectOption("2014");
   await page
     .getByLabel("Subclasse 2", { exact: true })
     .selectOption("tce2020-swarmkeeper");
+  await page
+    .getByText("Progressão por nível (opcional)", { exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Organizar progressão", exact: true })
+    .click();
+  await page
+    .getByLabel("Classe no nível 13", { exact: true })
+    .selectOption("1");
+  await expect(
+    page.getByLabel("Níveis na classe 2", { exact: true }),
+  ).toHaveValue("8");
+  await page
+    .getByLabel("Classe no nível 13", { exact: true })
+    .selectOption("0");
   await expect(page.getByText(/total 20/)).toBeVisible();
   await expect(page.getByText(/Referência externa/).first()).toBeVisible();
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
   await page.getByLabel("Destreza", { exact: true }).fill("18");
   await page.getByLabel("Sabedoria", { exact: true }).fill("18");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
-  await nextStep(page);
+  await nextStep(page, 2);
   await expect(page.getByText(/Monge 13/)).toBeVisible();
   await page.screenshot({
     path: test.info().outputPath("multiclasse-revisao.png"),
@@ -564,11 +623,14 @@ test("multiclasse com referências externas persiste e reabre no computador e ce
   await expect(page).toHaveURL(
     new RegExp(`/campanhas/${campaign.id}/personagens/[0-9a-f-]{36}$`),
   );
-  await page.reload(); await nextStep(page,2);
+  await page.reload();
+  await nextStep(page, 2);
   await expect(
     page.getByLabel("Níveis na classe 1", { exact: true }),
   ).toHaveValue("13");
-  await page.getByRole("button",{name:"Editar classe 2",exact:true}).click();
+  await page
+    .getByRole("button", { name: "Editar classe 2", exact: true })
+    .click();
   await expect(
     page.getByLabel("Níveis na classe 2", { exact: true }),
   ).toHaveValue("7");
@@ -587,4 +649,229 @@ test("multiclasse com referências externas persiste e reabre no computador e ce
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+});
+
+test("sete etapas, Monge 4, filtros, narrativa longa segura e correção pela revisão", async ({
+  page,
+  run,
+}) => {
+  const email = `e2e-${run}-narrative@example.test`;
+  await register(page.request, email);
+  await login(page.request, email);
+  const response = await page.request.post("/api/campaigns", {
+    headers: { Origin: origin },
+    data: { name: "Contos da neve" },
+  });
+  expect(response.status()).toBe(201);
+  const campaign = await response.json();
+  await page.goto(`/campanhas/${campaign.id}/personagens/novo`);
+  await page
+    .getByLabel("Nome do personagem", { exact: true })
+    .fill("Cronista do gelo");
+  await nextStep(page);
+  await page
+    .getByLabel("Espécie", { exact: true })
+    .selectOption("srd521-human");
+  await page
+    .getByLabel("Antecedente", { exact: true })
+    .selectOption("srd521-soldier");
+  await nextStep(page);
+  await page.getByLabel("Classe 1", { exact: true }).selectOption("custom");
+  await page
+    .getByLabel("Classe 1 personalizada", { exact: true })
+    .fill("Monge");
+  await page.getByLabel("Níveis na classe 1", { exact: true }).fill("4");
+  await expect(
+    page.getByText(/Classe manual: selecione explicitamente/),
+  ).toBeVisible();
+  await page
+    .getByLabel("Classe 1", { exact: true })
+    .selectOption("srd521-monk");
+  await expect(
+    page.getByLabel("Fonte de subclasse 1", { exact: true }),
+  ).not.toBeVisible();
+  await expect(
+    page
+      .getByLabel("Subclasse 1", { exact: true })
+      .locator('option[value="srd521-open-hand"]'),
+  ).toHaveText(/SRD/);
+  await expect(
+    page
+      .getByLabel("Subclasse 1", { exact: true })
+      .locator('option[value="phb2024-mercy"]'),
+  ).toHaveText(/Referência/);
+  await page
+    .getByText("Opções avançadas de subclasse 1", { exact: true })
+    .click();
+  await page
+    .getByLabel("Fonte de subclasse 1", { exact: true })
+    .selectOption("phb-2024");
+  await page
+    .getByLabel("Classe 1", { exact: true })
+    .selectOption("srd521-wizard");
+  await page
+    .getByLabel("Classe 1", { exact: true })
+    .selectOption("srd521-monk");
+  await page
+    .getByLabel("Subclasse 1", { exact: true })
+    .selectOption("srd521-open-hand");
+  await page.screenshot({
+    path: test.info().outputPath("classe-monge-4.png"),
+    fullPage: true,
+  });
+  await nextStep(page);
+  await page.getByLabel("PV máximos", { exact: true }).fill("30");
+  await page.getByLabel("PV atuais", { exact: true }).fill("30");
+  await nextStep(page);
+  const narrative = {
+    "Descrição física e comportamental": "Olhar atento.\nPassos tranquilos.",
+    Personalidade: "Observador",
+    Ideais: "Justiça",
+    Vínculos: "A aldeia",
+    Fraquezas: "Medo de perder amigos",
+    "História do personagem":
+      '<img src=x onerror="window.narrativeInjected=true">\n<script>window.narrativeInjected=true</script>\n' +
+      "Neve e lembranças. ".repeat(1000),
+  };
+  for (const [label, value] of Object.entries(narrative))
+    await page.getByLabel(label, { exact: true }).fill(value);
+  await previousStep(page);
+  await expect(page.getByLabel("PV atuais", { exact: true })).toHaveValue("30");
+  await nextStep(page);
+  await expect(
+    page.getByLabel("História do personagem", { exact: true }),
+  ).toHaveValue(narrative["História do personagem"]);
+  await page.screenshot({
+    path: test.info().outputPath("historia-personalidade.png"),
+    fullPage: true,
+  });
+  await nextStep(page);
+  await expect(page.locator("textarea")).toHaveCount(0);
+  await nextStep(page);
+  await page
+    .getByRole("button", {
+      name: "Editar História e personalidade",
+      exact: true,
+    })
+    .click();
+  await page.getByLabel("Ideais", { exact: true }).fill("Justiça e compaixão");
+  await nextStep(page, 2);
+  await expect(
+    page.locator(".narrative-review").filter({ hasText: "Ideais" }),
+  ).toContainText("Justiça e compaixão");
+  await page
+    .locator(".narrative-review")
+    .filter({ hasText: "História do personagem" })
+    .locator("summary")
+    .click();
+  await expect(
+    page.locator(".narrative-review img, .narrative-review script"),
+  ).toHaveCount(0);
+  expect(
+    await page.evaluate(() => Object.hasOwn(window, "narrativeInjected")),
+  ).toBe(false);
+  expect(
+    (
+      await (
+        await page.request.get(`/api/campaigns/${campaign.id}/characters`)
+      ).json()
+    ).length,
+  ).toBe(0);
+  await page
+    .getByRole("button", { name: "Salvar personagem", exact: true })
+    .click();
+  await expect(page).toHaveURL(/personagens\/[0-9a-f-]{36}$/);
+  await page.reload();
+  await nextStep(page, 4);
+  await expect(
+    page.getByLabel("História do personagem", { exact: true }),
+  ).toHaveValue(narrative["História do personagem"]);
+  await expect(page.getByLabel("Ideais", { exact: true })).toHaveValue(
+    "Justiça e compaixão",
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});
+
+test("ficha antiga sem campos opcionais reabre sem reclassificação e salva com versão", async ({
+  page,
+  run,
+}) => {
+  const email = `e2e-${run}-legacy@example.test`;
+  await register(page.request, email);
+  await login(page.request, email);
+  const campaign = await (
+    await page.request.post("/api/campaigns", {
+      headers: { Origin: origin },
+      data: { name: "Mesa antiga" },
+    })
+  ).json();
+  const input = {
+    name: "Monge antigo",
+    className: "Monge",
+    species: "Humano",
+    level: 4,
+    experience: 0,
+    hitPoints: 20,
+    maxHitPoints: 20,
+    temporaryHitPoints: 0,
+    armorClass: 14,
+    attributes: { STR: 10, DEX: 16, CON: 12, INT: 10, WIS: 16, CHA: 8 },
+  };
+  const response = await page.request.post(
+    `/api/campaigns/${campaign.id}/characters`,
+    { headers: { Origin: origin }, data: input },
+  );
+  expect(response.status()).toBe(201);
+  const saved = await response.json();
+  await page.goto(`/campanhas/${campaign.id}/personagens/${saved.id}`);
+  await nextStep(page, 2);
+  await expect(
+    page.getByLabel("Classe 1 personalizada", { exact: true }),
+  ).toHaveValue("Monge");
+  await nextStep(page, 2);
+  for (const label of [
+    "Descrição física e comportamental",
+    "Personalidade",
+    "Ideais",
+    "Vínculos",
+    "Fraquezas",
+    "História do personagem",
+  ])
+    await expect(page.getByLabel(label, { exact: true })).toHaveValue("");
+  await nextStep(page, 2);
+  await page
+    .getByRole("button", { name: "Salvar personagem", exact: true })
+    .click();
+  await expect(page.getByText("Ficha salva com sucesso.")).toBeVisible();
+  const updated = await (
+    await page.request.get(
+      `/api/campaigns/${campaign.id}/characters/${saved.id}`,
+    )
+  ).json();
+  expect(updated).toMatchObject({
+    ...input,
+    classId: null,
+    backstory: "",
+    version: 1,
+  });
+  const oversized = await page.request.post(
+    `/api/campaigns/${campaign.id}/characters`,
+    {
+      headers: { Origin: origin },
+      data: { ...input, backstory: "x".repeat(262145) },
+    },
+  );
+  expect(oversized.status()).toBe(413);
+  const invalid = await page.request.post(
+    `/api/campaigns/${campaign.id}/characters`,
+    {
+      headers: { Origin: origin },
+      data: { ...input, backstory: "x".repeat(20001) },
+    },
+  );
+  expect(invalid.status()).toBe(400);
 });

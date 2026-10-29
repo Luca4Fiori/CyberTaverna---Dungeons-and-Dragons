@@ -36,3 +36,7 @@ POST/PATCH de ficha aceitam também classId/speciesId/backgroundId/subclassId (o
 ## Extensão de fichas: classes relacionais
 
 POST `/api/campaigns/:campaignId/characters` e PATCH `/api/campaigns/:campaignId/characters/:id` aceitam `classes` e `multiclassAdjustment`. O array contém classId/className, subclassId/subclassName, level, rulesVersion, sourceId/subclassSourceId e acquisitionLevels. IDs de catálogo podem ser null para opção manual; fontes registradas são resolvidas pelo servidor. O nível total é calculado, mantendo level escalar como projeção. PATCH requer expectedVersion. Omissão de classes em ficha multiclasse retorna 409 CLASSES_REQUIRED. Erros de distribuição/requisitos retornam 400 INVALID_MULTICLASS; tentativa de conceder ajuste por jogador retorna 403 GM_ADJUSTMENT_REQUIRED. Retornos detalhados incluem classes; os campos de primeira classe continuam para compatibilidade. Ver [MULTICLASSE.md](MULTICLASSE.md) e fixture de teste `tests/fixtures/swarm.ts`.
+
+## Campos narrativos da ficha
+
+POST/PATCH de personagens aceitam description, personality, ideals, bonds e flaws (até 5.000 caracteres cada) e backstory (até 20.000). Todos são strings opcionais; omissão em PATCH preserva o valor, string vazia limpa. Respostas autorizadas incluem os campos. Corpo máximo de 256 KiB somente nesses endpoints; demais requisições permanecem limitadas a 16 KiB. ExpectedVersion e permissões não mudam. Narrativa não altera backgroundId/backgroundName nem atributos. [Detalhes](CRIADOR_NARRATIVO.md).

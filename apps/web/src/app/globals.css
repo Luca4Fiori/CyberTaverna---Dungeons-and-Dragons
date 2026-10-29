@@ -900,12 +900,91 @@ fieldset:disabled {
   }
 }
 
-.class-cards { display: grid; gap: 1rem; }
-.class-card { min-width: 0; padding: 1.25rem; border: 1px solid #D3AE6355; border-radius: 1rem; background: #10151F80; }
-.class-card header { display: flex; gap: 1rem; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
-.class-card h4 { color: #A6DCEF; font-size: 1.2rem; }
-.progression-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 1rem; }
-.character-sheet details { padding: .75rem 0; }
-.character-sheet summary { cursor: pointer; color: #D3AE63; margin-bottom: .5rem; }
-.character-sheet textarea { min-height: 100px; width: 100%; }
-.creation-progress { flex-wrap: wrap; }
+.class-cards {
+  display: grid;
+  gap: 1rem;
+}
+.class-card {
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid #d3ae6355;
+  border-radius: 1rem;
+  background: #10151f80;
+}
+.class-card header {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.class-card h4 {
+  color: #a6dcef;
+  font-size: 1.2rem;
+}
+.progression-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+.character-sheet details {
+  padding: 0.75rem 0;
+}
+.character-sheet summary {
+  cursor: pointer;
+  color: #d3ae63;
+  margin-bottom: 0.5rem;
+}
+.character-sheet textarea {
+  min-height: 100px;
+  width: 100%;
+}
+.creation-progress {
+  flex-wrap: wrap;
+}
+
+.narrative-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.narrative-fields label:first-child,
+.narrative-fields label:last-child {
+  grid-column: 1 / -1;
+}
+.narrative-fields textarea {
+  min-height: 12rem;
+  resize: vertical;
+  line-height: 1.7;
+  padding: 1rem;
+}
+.narrative-fields label:last-child textarea {
+  min-height: 20rem;
+}
+.narrative-review p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+}
+.narrative-review {
+  border-top: 1px solid #343c4b;
+}
+@media (max-width: 700px) {
+  .narrative-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.narrative-fields textarea {
+  max-height: 40rem;
+  overflow-y: auto;
+  border: 1px solid #a6dcef40;
+  border-radius: 0.75rem;
+  background: #10151f;
+  color: #e6e0d2;
+}
+.narrative-fields textarea:focus-visible {
+  outline: 2px solid #a6dcef;
+  outline-offset: 2px;
+}

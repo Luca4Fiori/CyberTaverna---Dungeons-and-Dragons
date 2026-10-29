@@ -144,6 +144,12 @@ model Character {
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
   classes CharacterClass[]
+  description String @default("") @db.Text
+  personality String @default("") @db.Text
+  ideals String @default("") @db.Text
+  bonds String @default("") @db.Text
+  flaws String @default("") @db.Text
+  backstory String @default("") @db.Text
   portraitUrl String @default("") @db.VarChar(2048)
   biography String @default("") @db.VarChar(2000)
   multiclassAdjustment String @default("") @db.VarChar(1000)

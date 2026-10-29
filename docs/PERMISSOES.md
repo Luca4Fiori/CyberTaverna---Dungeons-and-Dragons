@@ -26,3 +26,7 @@ A listagem geral agrega apenas fichas cujo ownerId pertence à sessão autentica
 ## Exceções de multiclasse
 
 Somente GM da campanha pode criar/alterar multiclassAdjustment. A justificativa para dispensar requisitos exige pelo menos 10 caracteres e é registrada no histórico com o autor. Jogador mantém aprovação apenas quando a distribuição e os atributos que a fundamentam não mudam; não consegue aprovar nova exceção. Limites de níveis e vínculo classe/subclasse são invariantes. Nenhuma mudança nas permissões de proprietário, isolamento, versão esperada ou bloqueio por arquivamento.
+
+## Textos narrativos
+
+Description, personality, ideals, bonds, flaws e backstory seguem exatamente a autorização da ficha: mestre da campanha e proprietário autorizado; usuários de outras campanhas não podem consultar ou modificar. Não existe publicação automática da história no diário ou sessão. Edições são versionadas e auditadas, inclusive alterações pelo mestre.

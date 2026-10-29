@@ -47,38 +47,63 @@ export function CatalogChoice({
           onChange={(event) => setQuery(event.target.value)}
         />
       </label>
-      <details><summary>Opções avançadas de {label.toLowerCase()}</summary><div className="sheet-grid">
-        <label>
-          Edição de {label.toLowerCase()}
-          <select
-            aria-label={`Edição de ${label.toLowerCase()}`}
-            value={edition}
-            onChange={(e) => setEdition(e.target.value)}
-          >
-            <option value="">Todas</option>
-            {[...new Set(options.map((x) => x.source.edition))].map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Fonte de {label.toLowerCase()}
-          <select
-            aria-label={`Fonte de ${label.toLowerCase()}`}
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-          >
-            <option value="">Todas</option>
-            {[
-              ...new Map(options.map((x) => [x.source.id, x.source])).values(),
-            ].map((value) => (
-              <option key={value.id} value={value.id}>
-                {value.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div><button type="button" className="button" onClick={()=>{setSource("");setEdition("");setQuery("");}}>Limpar filtros de {label.toLowerCase()}</button></details>
+      <details>
+        <summary>Opções avançadas de {label.toLowerCase()}</summary>
+        <div className="sheet-grid">
+          <label>
+            Edição de {label.toLowerCase()}
+            <select
+              aria-label={`Edição de ${label.toLowerCase()}`}
+              value={edition}
+              onChange={(e) => setEdition(e.target.value)}
+            >
+              <option value="">Todas</option>
+              {[...new Set(options.map((x) => x.source.edition))].map(
+                (value) => (
+                  <option key={value}>{value}</option>
+                ),
+              )}
+            </select>
+          </label>
+          <label>
+            Fonte de {label.toLowerCase()}
+            <select
+              aria-label={`Fonte de ${label.toLowerCase()}`}
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+            >
+              <option value="">Todas</option>
+              {[
+                ...new Map(
+                  options.map((x) => [x.source.id, x.source]),
+                ).values(),
+              ].map((value) => (
+                <option key={value.id} value={value.id}>
+                  {value.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {selected && (
+          <p className="field-help">
+            {selected.source.name} · edição {selected.source.edition} · versão{" "}
+            {selected.source.version}
+            {selected.page ? `, p. ${selected.page}` : ""}
+          </p>
+        )}
+        <button
+          type="button"
+          className="button"
+          onClick={() => {
+            setSource("");
+            setEdition("");
+            setQuery("");
+          }}
+        >
+          Limpar filtros de {label.toLowerCase()}
+        </button>
+      </details>
       <label>
         {label}
         <select
@@ -96,14 +121,22 @@ export function CatalogChoice({
           </option>
           {rows.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.name} — {item.source.content === "reference-only" ? "Referência" : item.source.content === "user-content" ? "Personalizada" : "SRD"}
+              {item.name} —{" "}
+              {item.source.content === "reference-only"
+                ? "Referência"
+                : item.source.content === "user-content"
+                  ? "Personalizada"
+                  : "SRD"}
             </option>
           ))}
           <option value="custom">Personalizado / preenchimento manual</option>
         </select>
       </label>
       {!filtered.length && (
-        <p>Nenhuma opção encontrada para estes filtros e nível. Limpe os filtros ou selecione uma opção personalizada.</p>
+        <p>
+          Nenhuma opção encontrada para estes filtros e nível. Limpe os filtros
+          ou selecione uma opção personalizada.
+        </p>
       )}
       {custom && (
         <label>
@@ -120,7 +153,7 @@ export function CatalogChoice({
         {custom
           ? "Combine esta escolha com o mestre. Ela não aplica habilidades automaticamente."
           : selected
-            ? `${selected.description} ${selected.source.name} · ${selected.source.edition} · versão ${selected.source.version}${selected.page ? `, p. ${selected.page}` : ""}. ${selected.compatibility === "legacy-manual" ? "Opção anterior: adaptação manual com o mestre." : ""}`
+            ? `${selected.description} ${selected.compatibility === "legacy-manual" ? "Opção anterior: adaptação manual com o mestre." : ""}`
             : "Escolha uma opção para consultar a descrição."}
       </p>
     </section>

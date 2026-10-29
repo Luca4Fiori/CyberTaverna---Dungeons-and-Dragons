@@ -174,3 +174,28 @@ Prioridade atual solicitada: estrutura de catálogo e fichas multiclasse. Inspec
 O catálogo extensível ainda não inclui registros de habilidades/talentos/magias. Conteúdo personalizado permanece manual na ficha; falta editor de biblioteca homebrew compartilhada. Requisitos não implementados de classes manuais exigem decisão registrada do mestre em multiclasse. Não há conversão automática de antecedentes antigos, concessão automática de recursos/habilidades, agregação de espaços de magia, proficiências, inventário ou progressão completa por nível. A ordem de aquisição não reconstrói atributos históricos.
 
 Próximo incremento recomendado: implementar recursos e progressão por classe com dados licenciados do SRD e testes de agregação multiclasse, mantendo referências externas manuais. A solicitação anterior de Socket.IO/presença continua pendente e não foi substituída por simulação. Ver [MULTICLASSE.md](MULTICLASSE.md) para contrato, fontes, compatibilidade e limites.
+
+## Assistente de sete etapas e sistema narrativo — 29/10/2026
+
+A orientação mais recente priorizou redesign e narrativa. O catálogo persistente/importador, solicitado antes, não foi iniciado e permanece pendente. Foram revisados o criador, contratos, migrações, multiclasse, testes e commits 19f3971/6185916; implementações anteriores e arquivos locais foram preservados.
+
+- [x] Sete etapas independentes, com apenas uma etapa montada: Identidade; Espécie e antecedente; Classes e subclasses; Atributos e defesas; História e personalidade; Recursos e habilidades; Revisão final.
+- [x] Anterior/Continuar, indicador de progresso e preservação das escolhas. Revisão com acesso direto às etapas para correção. Gravação somente na confirmação, sem rascunho implícito.
+- [x] Descrição física/comportamental, personalidade, ideais, vínculos, fraquezas e história opcionais, multilinha, persistidos separadamente do antecedente.
+- [x] Textareas amplas, contadores, crescimento com rolagem para textos extensos, foco e contraste visíveis. Limites: 5.000 caracteres por campo e 20.000 na história.
+- [x] Migração aditiva aplicada aos bancos local e de testes; verificação confirmou preservação da ficha real existente, identidade, vínculos, campos legados e versão. Texto anterior em biography é preservado e copiado para backstory quando existente.
+- [x] Permissões do mestre/proprietário, isolamento de campanhas, histórico e expectedVersion preservados. Omissão dos novos campos por cliente antigo não apaga narrativa.
+- [x] Texto simples com exibição escapada; HTML armazenado como texto não cria elementos nem executa scripts. Limites Zod e corpo de 256 KiB somente para escrita de fichas; demais endpoints mantêm 16 KiB.
+- [x] Cartões por classe, uma edição expandida por vez, filtros técnicos recolhidos e progressão visual por nível. Multiclasse e aprovação de exceções continuam validadas no servidor.
+- [x] Caso Monge 4 coberto: vínculo manual explicado; seleção explícita de classe do catálogo libera subclasses elegíveis; filtros reiniciados ao trocar classe. SRD, referências externas e opções personalizadas diferenciadas.
+- [x] Recursos apresenta apenas PV/CA e cálculos existentes, com aviso explícito das funcionalidades futuras indisponíveis.
+
+### Resultados reais
+
+- **74/74 testes unitários e de integração aprovados**, incluindo narrativa longa, campos opcionais, edição do mestre, acesso indevido, preservação em PATCH antigo, execução das migrações em cópia temporária, limites de texto, atributos e multiclasse.
+- **20/20 E2E aprovados** em desktop/mobile: fluxos anteriores, sete etapas, voltar e corrigir, preservação de campos, Monge 4, troca de filtros, progressão visual, gravação e recarga de história extensa, HTML inerte, ausência de gravação antes da confirmação e ficha criada pelo contrato antigo. Limites de corpo (413) e de história (400) também verificados.
+- Prisma generate/validate, typecheck, ESLint, Prettier e build web/realtime aprovados. Após o ajuste final de contraste das textareas, build e fluxo narrativo desktop/mobile foram novamente verificados.
+- Capturas de classes e história inspecionadas; testes confirmam ausência de overflow horizontal no celular. Corrigidos rótulos acessíveis que incluíam o contador e um seletor ambíguo do teste de revisão.
+- Sem push, publicação ou mudanças de infraestrutura externa.
+
+Limitações: conteúdo ainda fica apenas no estado do formulário até salvar; recarregar uma ficha nova perde o preenchimento não confirmado. Não há editor de texto rico, upload de retratos, habilidades/magias/equipamentos automáticos ou sincronização multiplayer. Catálogo PostgreSQL, importador e biblioteca homebrew compartilhada permanecem tarefas futuras. Detalhes em [CRIADOR_NARRATIVO.md](CRIADOR_NARRATIVO.md).

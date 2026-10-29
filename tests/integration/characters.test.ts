@@ -298,3 +298,125 @@ it("migração aditiva preserva registros e vínculos legados", async () => {
     });
   });
 });
+
+it("narrativa persiste, mestre edita e leitores indevidos são bloqueados", async () => {
+  const table = (
+    await campaigns.create(tokens[0], { name: "Histórias privadas" })
+  ).id;
+  campaignIds.push(table);
+  const invitation = await campaigns.invite(tokens[0], table, { maxUses: 2 });
+  await campaigns.accept(tokens[1], { token: invitation.token });
+  await campaigns.accept(tokens[2], { token: invitation.token });
+  const narrative = {
+    description: "Cicatriz no rosto.\nGestos calmos.",
+    personality: "Curioso",
+    ideals: "Liberdade",
+    bonds: "Minha irmã",
+    flaws: "Impaciente",
+    backstory: "Capítulo da neve.\n\n" + "Á".repeat(18000),
+  };
+  const input = {
+    ...data,
+    ...narrative,
+    backgroundId: "srd521-soldier",
+    backgroundName: "Soldado",
+  };
+  const created = await chars.create(tokens[1], table, input);
+  expect(await chars.get(tokens[0], table, created.id)).toMatchObject({
+    ...narrative,
+    backgroundId: "srd521-soldier",
+    attributes: data.attributes,
+  });
+  await expect(chars.get(tokens[2], table, created.id)).rejects.toMatchObject({
+    status: 404,
+  });
+  await expect(chars.get(tokens[1], other, created.id)).rejects.toMatchObject({
+    status: 404,
+  });
+  await expect(
+    chars.update(tokens[2], table, created.id, {
+      ...input,
+      backstory: "Ataque",
+      expectedVersion: 0,
+    }),
+  ).rejects.toMatchObject({ status: 403 });
+  await chars.update(tokens[0], table, created.id, {
+    ...input,
+    backstory: "História editada pelo mestre.\n<img src=x onerror=alert(1)>",
+    expectedVersion: 0,
+  });
+  const current = await chars.get(tokens[1], table, created.id);
+  expect(current.backstory).toContain("História editada pelo mestre.");
+  expect(current.version).toBe(1);
+  // Older clients omit the new fields: absence must not erase saved narratives.
+  await chars.update(tokens[1], table, created.id, {
+    ...data,
+    expectedVersion: 1,
+  });
+  expect((await chars.get(tokens[1], table, created.id)).backstory).toBe(
+    current.backstory,
+  );
+  await expect(
+    chars.update(tokens[0], table, created.id, {
+      ...input,
+      expectedVersion: 0,
+    }),
+  ).rejects.toMatchObject({ status: 409 });
+  expect(
+    (
+      await db.characterHistory.findUniqueOrThrow({
+        where: { characterId_version: { characterId: created.id, version: 1 } },
+      })
+    ).actorId,
+  ).toBe(ids[0]);
+});
+it("ficha sem narrativa mantém todos os novos campos opcionais", async () => {
+  const created = await chars.create(tokens[1], other, data);
+  expect(created).toMatchObject({
+    description: "",
+    personality: "",
+    ideals: "",
+    bonds: "",
+    flaws: "",
+    backstory: "",
+  });
+});
+it("migrações de identidade e narrativa preservam associações, versões e texto anterior", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const identity = await readFile(
+    "packages/database/prisma/migrations/202610290002_character_identity/migration.sql",
+    "utf8",
+  );
+  const narrative = await readFile(
+    "packages/database/prisma/migrations/202610290003_character_narrative/migration.sql",
+    "utf8",
+  );
+  await db.$transaction(async (tx) => {
+    await tx.$executeRaw`CREATE TEMP TABLE "Character" ON COMMIT DROP AS SELECT * FROM public."Character" WHERE id = ${character}::uuid`;
+    await tx.$executeRawUnsafe("SET LOCAL search_path TO pg_temp");
+    await tx.$executeRawUnsafe(
+      'ALTER TABLE "Character" DROP COLUMN "portraitUrl", DROP COLUMN "biography", DROP COLUMN "description", DROP COLUMN "personality", DROP COLUMN "ideals", DROP COLUMN "bonds", DROP COLUMN "flaws", DROP COLUMN "backstory"',
+    );
+    const before = await tx.$queryRaw<
+      Array<Record<string, unknown>>
+    >`SELECT * FROM "Character"`;
+    await tx.$executeRawUnsafe(identity);
+    await tx.$executeRaw`UPDATE "Character" SET "biography" = ${"Texto anterior\nPreservado"}`;
+    for (const statement of narrative.split(";").filter((x) => x.trim()))
+      await tx.$executeRawUnsafe(statement);
+    const after = await tx.$queryRaw<
+      Array<Record<string, unknown>>
+    >`SELECT * FROM "Character"`;
+    expect(after[0]).toMatchObject({
+      ...before[0],
+      portraitUrl: "",
+      description: "",
+      personality: "",
+      ideals: "",
+      bonds: "",
+      flaws: "",
+      backstory: "Texto anterior\nPreservado",
+      biography: "Texto anterior\nPreservado",
+    });
+  });
+});

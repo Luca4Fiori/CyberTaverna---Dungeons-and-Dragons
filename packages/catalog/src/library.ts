@@ -138,3 +138,15 @@ export const records: CatalogRecord[] = [
 ];
 
 export type CharacterCatalog = typeof library;
+
+export function eligibleSubclasses(
+  classId: string | null | undefined,
+  level: number,
+  catalog: CharacterCatalog = library,
+) {
+  return classId
+    ? catalog.subclasses.filter(
+        (item) => item.classId === classId && level >= (item.minimumLevel ?? 3),
+      )
+    : [];
+}

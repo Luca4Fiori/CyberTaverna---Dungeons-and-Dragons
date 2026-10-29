@@ -43,3 +43,7 @@ Deploy futuro separará web/realtime, TLS/proxy WebSocket, banco e objetos priva
 ## Incremento: catálogo versionado e multiclasse
 
 O catálogo estático extensível em `packages/catalog/src/library.ts` separa registros e fontes, incluindo estado de licenciamento e referência externa. As categorias habilidade/talento/magia estão preparadas, sem regras fictícias. `packages/rules/src/multiclass.ts` calcula níveis e requisitos; `packages/domain/src/multiclass.ts` valida opções e exceções dentro dos serviços transacionais autorizados. `CharacterClass` é a distribuição persistida; campos escalares são projeções de compatibilidade. Detalhes em [MULTICLASSE.md](MULTICLASSE.md).
+
+## Assistente narrativo
+
+CharacterEditor monta somente a etapa ativa entre sete telas; estado controlado preserva escolhas durante navegação. ClassDistribution organiza cartões e progressão visual; CatalogChoice reinicia filtros quando o vínculo de classe muda. narrativeFields/narrativeSchema centralizam rótulos e limites dos seis campos narrativos. Serviços persistem textos simples com as mesmas transações e permissões da ficha. A revisão nunca interpreta HTML. Aumento do limite de requisição é restrito a POST/PATCH de personagens. Ver [CRIADOR_NARRATIVO.md](CRIADOR_NARRATIVO.md).

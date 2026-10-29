@@ -37,9 +37,43 @@ export const characterClassSchema = z
   })
   .strict();
 export type CharacterClassInput = z.infer<typeof characterClassSchema>;
+export const narrativeFields = [
+  {
+    key: "description",
+    label: "Descrição física e comportamental",
+    maxLength: 5000,
+  },
+  { key: "personality", label: "Personalidade", maxLength: 5000 },
+  { key: "ideals", label: "Ideais", maxLength: 5000 },
+  { key: "bonds", label: "Vínculos", maxLength: 5000 },
+  { key: "flaws", label: "Fraquezas", maxLength: 5000 },
+  { key: "backstory", label: "História do personagem", maxLength: 20000 },
+] as const;
+export const narrativeSchema = z
+  .object({
+    description: z.string().max(5000).optional(),
+    personality: z.string().max(5000).optional(),
+    ideals: z.string().max(5000).optional(),
+    bonds: z.string().max(5000).optional(),
+    flaws: z.string().max(5000).optional(),
+    backstory: z.string().max(20000).optional(),
+  })
+  .strict();
 export const characterFieldsSchema = z
   .object({
-    portraitUrl: z.union([z.literal(""), z.url().max(2048).refine(value => {const url=new URL(value);return url.protocol === "https:" && !url.username && !url.password;}, "Use uma URL HTTPS sem credenciais.")]).optional(),
+    ...narrativeSchema.shape,
+    portraitUrl: z
+      .union([
+        z.literal(""),
+        z
+          .url()
+          .max(2048)
+          .refine((value) => {
+            const url = new URL(value);
+            return url.protocol === "https:" && !url.username && !url.password;
+          }, "Use uma URL HTTPS sem credenciais."),
+      ])
+      .optional(),
     biography: z.string().trim().max(2000).optional(),
     classes: z.array(characterClassSchema).min(1).max(20).optional(),
     multiclassAdjustment: z.string().trim().max(1000).optional(),
